@@ -108,7 +108,7 @@ class AuthManager: ObservableObject {
 
         do {
             // 更新用户密码
-            let response = try await supabase.auth.update(
+            let response = try await supabase.auth.updateUser(
                 user: UserAttributes(password: password)
             )
 
@@ -225,7 +225,7 @@ class AuthManager: ObservableObject {
 
         do {
             // 更新用户密码
-            let response = try await supabase.auth.update(
+            let response = try await supabase.auth.updateUser(
                 user: UserAttributes(password: newPassword)
             )
 
