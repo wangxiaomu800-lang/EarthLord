@@ -1,12 +1,6 @@
 import SwiftUI
 import Supabase
 
-// 初始化 Supabase 客户端
-let supabase = SupabaseClient(
-    supabaseURL: URL(string: "https://vuqfufnrxzsmkzmhtuhw.supabase.co")!,
-    supabaseKey: "sb_publishable_sej6ww803g00vIuiXFjhFQ_JdRV2QHk"
-)
-
 struct SupabaseTestView: View {
     @State private var isConnected: Bool? = nil
     @State private var debugLog: String = "点击按钮开始测试连接..."
@@ -86,7 +80,7 @@ struct SupabaseTestView: View {
 
             do {
                 // 使用 non_existent_table 测试基本连接
-                let _: [String] = try await supabase
+                let _: [String] = try await SupabaseConfig.shared
                     .from("non_existent_table")
                     .select()
                     .execute()
@@ -142,7 +136,7 @@ struct SupabaseTestView: View {
                     debugLog += "尝试方法 1: 使用 count 查询...\n"
                 }
 
-                let countResponse = try await supabase
+                let countResponse = try await SupabaseConfig.shared
                     .from("profiles")
                     .select("*", head: true, count: .exact)
                     .execute()
@@ -157,7 +151,7 @@ struct SupabaseTestView: View {
                     debugLog += "尝试方法 2: 查询具体数据...\n"
                 }
 
-                let profiles: [ProfileTest] = try await supabase
+                let profiles: [ProfileTest] = try await SupabaseConfig.shared
                     .from("profiles")
                     .select("id, username")
                     .limit(5)

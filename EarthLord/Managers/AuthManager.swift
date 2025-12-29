@@ -1,5 +1,6 @@
 import SwiftUI
 import Supabase
+import Combine
 
 /// 认证管理器 - 管理用户注册、登录、密码重置等认证流程
 @MainActor
@@ -34,7 +35,12 @@ class AuthManager: ObservableObject {
 
     // MARK: - Initialization
 
-    init(supabase: SupabaseClient = supabase) {
+    init() {
+        self.supabase = SupabaseConfig.shared
+    }
+
+    // 用于测试的自定义初始化方法
+    init(supabase: SupabaseClient) {
         self.supabase = supabase
     }
 
@@ -108,16 +114,16 @@ class AuthManager: ObservableObject {
 
         do {
             // 更新用户密码
-            let response = try await supabase.auth.updateUser(
+            let user = try await supabase.auth.update(
                 user: UserAttributes(password: password)
             )
 
             // 密码设置成功，注册流程完成
-            currentUser = response.user
+            currentUser = user
             needsPasswordSetup = false
             isAuthenticated = true  // ✅ 注册完成，设置为已认证
 
-            print("✅ 注册完成: \(response.user.email ?? "Unknown")")
+            print("✅ 注册完成: \(user.email ?? "Unknown")")
 
         } catch {
             errorMessage = "设置密码失败: \(error.localizedDescription)"
@@ -225,16 +231,16 @@ class AuthManager: ObservableObject {
 
         do {
             // 更新用户密码
-            let response = try await supabase.auth.updateUser(
+            let user = try await supabase.auth.update(
                 user: UserAttributes(password: newPassword)
             )
 
             // 密码重置成功
-            currentUser = response.user
+            currentUser = user
             needsPasswordSetup = false
             isAuthenticated = true
 
-            print("✅ 密码重置成功: \(response.user.email ?? "Unknown")")
+            print("✅ 密码重置成功: \(user.email ?? "Unknown")")
 
         } catch {
             errorMessage = "重置密码失败: \(error.localizedDescription)"
@@ -315,19 +321,18 @@ class AuthManager: ObservableObject {
             // 获取当前会话
             let session = try await supabase.auth.session
 
-            if let user = session.user {
-                // 会话有效，用户已登录
-                currentUser = user
-                isAuthenticated = true
-                needsPasswordSetup = false
-
-                print("✅ 会话有效: \(user.email ?? "Unknown")")
-            } else {
-                // 无会话，用户未登录
+            // 检查会话是否过期（启用 emitLocalSessionAsInitialSession 后需要额外检查）
+            if session.isExpired {
+                // 会话已过期，清除状态
                 currentUser = nil
                 isAuthenticated = false
-
-                print("ℹ️ 无有效会话")
+                print("⚠️ 会话已过期")
+            } else {
+                // 会话有效，用户已登录
+                currentUser = session.user
+                isAuthenticated = true
+                needsPasswordSetup = false
+                print("✅ 会话有效: \(session.user.email ?? "Unknown")")
             }
 
         } catch {

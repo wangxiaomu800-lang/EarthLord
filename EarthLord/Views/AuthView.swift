@@ -3,7 +3,7 @@ import SwiftUI
 /// 认证页面 - 登录/注册/找回密码
 struct AuthView: View {
     // MARK: - State
-    @StateObject private var authManager = AuthManager()
+    @EnvironmentObject var authManager: AuthManager
 
     /// 当前选中的Tab（登录/注册）
     @State private var selectedTab: AuthTab = .login
@@ -816,4 +816,5 @@ struct CustomTextFieldStyle: TextFieldStyle {
 // MARK: - Preview
 #Preview {
     AuthView()
+        .environmentObject(AuthManager())
 }
