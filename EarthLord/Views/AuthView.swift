@@ -245,16 +245,36 @@ struct AuthView: View {
         VStack(spacing: 16) {
             // 邮箱输入框
             VStack(alignment: .leading, spacing: 8) {
-                Text("邮箱")
-                    .font(.subheadline)
-                    .foregroundColor(ApocalypseTheme.textSecondary)
+                HStack {
+                    Text("邮箱")
+                        .font(.subheadline)
+                        .foregroundColor(ApocalypseTheme.textSecondary)
+
+                    Spacer()
+
+                    // 如果已发送验证码，显示"修改邮箱"按钮
+                    if authManager.otpSent {
+                        Button("修改邮箱") {
+                            // 重置注册状态
+                            authManager.resetState()
+                            registerOTP = ""
+                            otpCountdown = 0
+                            otpTimer?.invalidate()
+                        }
+                        .font(.caption)
+                        .foregroundColor(ApocalypseTheme.info)
+                    }
+                }
 
                 TextField("请输入邮箱", text: $registerEmail)
                     .textFieldStyle(CustomTextFieldStyle())
                     .textContentType(.emailAddress)
                     .autocapitalization(.none)
                     .keyboardType(.emailAddress)
-                    .disabled(authManager.otpSent)  // 发送后禁用修改
+                    .onChange(of: registerEmail) { _, _ in
+                        // 邮箱修改后，清除错误信息
+                        authManager.errorMessage = nil
+                    }
             }
 
             // 发送验证码按钮

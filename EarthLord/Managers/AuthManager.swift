@@ -9,6 +9,7 @@ class AuthManager: ObservableObject {
     // MARK: - Published Properties (发布属性)
 
     /// 用户是否已完全认证（已登录且完成所有必要步骤）
+    /// ⚠️ 重要：默认为 false，只有在会话验证成功后才设置为 true
     @Published var isAuthenticated: Bool = false
 
     /// 是否需要设置密码（OTP验证后但未设置密码）
@@ -33,15 +34,24 @@ class AuthManager: ObservableObject {
 
     private let supabase: SupabaseClient
 
+    /// 认证状态监听任务
+    private var authStateTask: Task<Void, Never>?
+
     // MARK: - Initialization
 
     init() {
         self.supabase = SupabaseConfig.shared
+        startAuthStateListener()
     }
 
     // 用于测试的自定义初始化方法
     init(supabase: SupabaseClient) {
         self.supabase = supabase
+        startAuthStateListener()
+    }
+
+    deinit {
+        authStateTask?.cancel()
     }
 
     // MARK: - 注册流程
@@ -54,19 +64,36 @@ class AuthManager: ObservableObject {
         otpSent = false
 
         do {
-            // 发送 OTP 验证码（shouldCreateUser: true 表示如果用户不存在则创建）
+            // 先尝试检查用户是否已存在（shouldCreateUser: false）
+            // 如果用户存在，会成功发送 OTP（但这不是我们想要的）
             try await supabase.auth.signInWithOTP(
                 email: email,
-                shouldCreateUser: true
+                shouldCreateUser: false
             )
 
-            otpSent = true
-            errorMessage = nil
-            print("✅ 注册验证码已发送到: \(email)")
+            // 如果执行到这里，说明用户已存在
+            errorMessage = "该邮箱已注册，请前往登录页面"
+            print("❌ 注册失败: 邮箱 \(email) 已被注册")
 
         } catch {
-            errorMessage = "发送验证码失败: \(error.localizedDescription)"
-            print("❌ 发送注册验证码失败: \(error)")
+            // 如果失败，说明用户不存在，可以注册
+            // 尝试发送注册 OTP（shouldCreateUser: true）
+            print("ℹ️ 用户不存在，准备发送注册验证码")
+
+            do {
+                try await supabase.auth.signInWithOTP(
+                    email: email,
+                    shouldCreateUser: true
+                )
+
+                otpSent = true
+                errorMessage = nil
+                print("✅ 注册验证码已发送到: \(email)")
+
+            } catch let createError {
+                errorMessage = "发送验证码失败: \(createError.localizedDescription)"
+                print("❌ 发送注册验证码失败: \(createError)")
+            }
         }
 
         isLoading = false
@@ -289,21 +316,28 @@ class AuthManager: ObservableObject {
     // MARK: - 其他认证方法
 
     /// 退出登录
-    func signOut() async {
+    /// - Parameter scope: 退出范围（默认为 global，清除所有设备的会话）
+    func signOut(scope: SignOutScope = .global) async {
         isLoading = true
         errorMessage = nil
 
+        print("🚪 开始退出登录...")
+
         do {
-            try await supabase.auth.signOut()
+            // 调用 Supabase 退出登录
+            try await supabase.auth.signOut(scope: scope)
 
-            // 清除所有状态
-            currentUser = nil
-            isAuthenticated = false
-            needsPasswordSetup = false
-            otpSent = false
-            otpVerified = false
+            // 清除所有本地状态
+            await MainActor.run {
+                currentUser = nil
+                isAuthenticated = false
+                needsPasswordSetup = false
+                otpSent = false
+                otpVerified = false
+            }
 
-            print("✅ 已退出登录")
+            print("✅ 退出登录成功")
+            print("📱 已清除本地会话状态")
 
         } catch {
             errorMessage = "退出登录失败: \(error.localizedDescription)"
@@ -323,27 +357,142 @@ class AuthManager: ObservableObject {
 
             // 检查会话是否过期（启用 emitLocalSessionAsInitialSession 后需要额外检查）
             if session.isExpired {
-                // 会话已过期，清除状态
-                currentUser = nil
-                isAuthenticated = false
-                print("⚠️ 会话已过期")
+                // 会话已过期，清除状态并自动跳转登录页
+                await handleSessionExpired()
             } else {
                 // 会话有效，用户已登录
                 currentUser = session.user
                 isAuthenticated = true
                 needsPasswordSetup = false
                 print("✅ 会话有效: \(session.user.email ?? "Unknown")")
+
+                let expiresAt = Date(timeIntervalSince1970: session.expiresAt)
+                print("🔐 会话过期时间: \(expiresAt)")
             }
 
         } catch {
             // 会话无效或已过期
-            currentUser = nil
-            isAuthenticated = false
-
+            await handleSessionExpired()
             print("⚠️ 会话检查失败或已过期: \(error)")
         }
 
         isLoading = false
+    }
+
+    /// 处理会话过期
+    private func handleSessionExpired() async {
+        await MainActor.run {
+            currentUser = nil
+            isAuthenticated = false
+            needsPasswordSetup = false
+            otpSent = false
+            otpVerified = false
+            errorMessage = "会话已过期，请重新登录"
+        }
+
+        print("⏰ 会话已过期，用户需要重新登录")
+    }
+
+    // MARK: - 认证状态监听
+
+    /// 启动认证状态监听
+    /// 监听 Supabase Auth 状态变化，自动更新 isAuthenticated
+    private func startAuthStateListener() {
+        authStateTask = Task { @MainActor in
+            for await (event, session) in supabase.auth.authStateChanges {
+                handleAuthStateChange(event: event, session: session)
+            }
+        }
+    }
+
+    /// 处理认证状态变化
+    /// - Parameters:
+    ///   - event: 认证事件类型
+    ///   - session: 会话信息（可选）
+    private func handleAuthStateChange(event: AuthChangeEvent, session: Session?) {
+        print("🔐 认证状态变化: \(event)")
+
+        switch event {
+        case .initialSession, .signedIn, .tokenRefreshed:
+            // 用户已登录或会话刷新
+            if let session = session {
+                if !session.isExpired {
+                    currentUser = session.user
+
+                    // ⚠️ 重要：如果正在注册流程中（需要设置密码），不要自动认证
+                    if needsPasswordSetup {
+                        isAuthenticated = false
+                        print("⚠️ 用户已登录但需要设置密码（注册流程）")
+                    } else {
+                        isAuthenticated = true
+                        print("✅ 用户已登录: \(session.user.email ?? "Unknown")")
+
+                        // 显示会话有效期（expiresAt 是时间戳）
+                        let expiresAt = Date(timeIntervalSince1970: session.expiresAt)
+                        let timeRemaining = expiresAt.timeIntervalSinceNow
+                        if timeRemaining > 0 {
+                            print("⏱️  会话有效期剩余: \(Int(timeRemaining / 60)) 分钟")
+                        } else {
+                            print("⚠️ 会话即将过期或已过期")
+                        }
+                    }
+                } else {
+                    // 会话已过期，触发过期处理
+                    print("⏰ 检测到会话已过期，自动退出登录")
+                    Task {
+                        await handleSessionExpired()
+                    }
+                }
+            } else {
+                // 没有会话，清除状态
+                currentUser = nil
+                isAuthenticated = false
+                print("⚠️ 无会话信息")
+            }
+
+        case .signedOut:
+            // 用户已登出
+            currentUser = nil
+            isAuthenticated = false
+            needsPasswordSetup = false
+            otpSent = false
+            otpVerified = false
+            print("👋 用户已登出")
+
+        case .userUpdated:
+            // 用户信息更新
+            if let session = session {
+                currentUser = session.user
+                print("📝 用户信息已更新")
+            }
+
+        case .userDeleted:
+            // 用户被删除
+            currentUser = nil
+            isAuthenticated = false
+            needsPasswordSetup = false
+            otpSent = false
+            otpVerified = false
+            print("🗑️ 用户已删除")
+
+        case .mfaChallengeVerified:
+            // MFA 验证（暂不处理）
+            print("🔒 MFA 验证完成")
+
+        case .passwordRecovery:
+            // 密码恢复流程：用户已验证 OTP，但需要设置新密码
+            if let session = session {
+                currentUser = session.user
+                needsPasswordSetup = true
+                isAuthenticated = false  // ⚠️ 重要：不要自动认证，等待设置新密码
+                print("🔑 密码恢复流程：等待设置新密码")
+            } else {
+                print("⚠️ 密码恢复流程但无会话信息")
+            }
+
+        @unknown default:
+            print("❓ 未知认证事件: \(event)")
+        }
     }
 
     // MARK: - 辅助方法
