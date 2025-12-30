@@ -223,8 +223,15 @@ class AuthManager: ObservableObject {
     ///   - code: 验证码
     /// ⚠️ 注意: type 必须是 .recovery（不是 .email）
     func verifyResetOTP(email: String, code: String) async {
-        isLoading = true
-        errorMessage = nil
+        await MainActor.run {
+            isLoading = true
+            errorMessage = nil
+            // ⚠️ 重要：在验证前就设置标志，防止 authStateChanges 事件抢先触发
+            needsPasswordSetup = true
+            isAuthenticated = false
+        }
+
+        print("🔑 开始验证密码重置验证码")
 
         do {
             // 验证密码重置 OTP（⚠️ 使用 .recovery 类型）
@@ -234,20 +241,28 @@ class AuthManager: ObservableObject {
                 type: .recovery  // ⚠️ 重要：密码重置使用 .recovery 类型
             )
 
-            // 验证成功后用户已登录，等待设置新密码
-            currentUser = response.user
-            otpVerified = true
-            needsPasswordSetup = true
+            // 验证成功后用户已登录，但需要设置新密码
+            await MainActor.run {
+                currentUser = response.user
+                otpVerified = true
+                needsPasswordSetup = true
+                isAuthenticated = false
+            }
 
             print("✅ 重置验证码验证成功: \(response.user.email ?? "Unknown")")
-            print("⚠️ 请设置新密码")
+            print("⚠️ 等待用户设置新密码")
 
         } catch {
-            errorMessage = "验证码错误或已过期: \(error.localizedDescription)"
+            await MainActor.run {
+                errorMessage = "验证码错误或已过期: \(error.localizedDescription)"
+                needsPasswordSetup = false
+            }
             print("❌ 验证重置验证码失败: \(error)")
         }
 
-        isLoading = false
+        await MainActor.run {
+            isLoading = false
+        }
     }
 
     /// 步骤3: 重置密码（设置新密码）
