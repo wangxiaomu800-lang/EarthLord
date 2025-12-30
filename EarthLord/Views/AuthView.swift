@@ -755,10 +755,12 @@ struct AuthView: View {
         authManager.errorMessage = "Apple 登录即将开放"
     }
 
-    /// Google 登录（占位）
+    /// Google 登录
     private func handleGoogleLogin() {
-        // TODO: 实现 Google 登录
-        authManager.errorMessage = "Google 登录即将开放"
+        print("🔵 用户点击 Google 登录按钮")
+        Task {
+            await authManager.signInWithGoogle()
+        }
     }
 
     // MARK: - Helper Functions
