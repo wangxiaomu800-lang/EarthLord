@@ -20,3 +20,4 @@ supabase/.temp/
 
 # macOS
 .DS_Store
+*.textClipping

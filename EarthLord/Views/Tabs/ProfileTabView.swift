@@ -11,68 +11,109 @@ struct ProfileTabView: View {
     /// 是否正在退出登录
     @State private var isSigningOut = false
 
+    /// 是否显示删除账号确认对话框
+    @State private var showDeleteAccountAlert = false
+
+    /// 是否正在删除账号
+    @State private var isDeletingAccount = false
+
+    /// 删除账号确认输入文本
+    @State private var deleteAccountConfirmationText = ""
+
+    /// 删除账号错误信息
+    @State private var deleteAccountError: String?
+
+    /// 是否显示删除错误提示
+    @State private var showDeleteAccountError = false
+
     var body: some View {
-        ZStack {
-            // 背景
-            ApocalypseTheme.background.ignoresSafeArea()
+        NavigationStack {
+            ZStack {
+                // 背景
+                ApocalypseTheme.background.ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 24) {
-                    // 标题
-                    Text("幸存者档案")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                        .foregroundColor(ApocalypseTheme.textPrimary)
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.top, 20)
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // 标题
+                        Text("幸存者档案")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                            .foregroundColor(ApocalypseTheme.textPrimary)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.top, 20)
 
-                    // 用户信息卡片
-                    userInfoCard
-                        .padding(.horizontal, 20)
+                        // 用户信息卡片
+                        userInfoCard
+                            .padding(.horizontal, 20)
 
-                    // 统计数据
-                    statsCard
-                        .padding(.horizontal, 20)
+                        // 统计数据
+                        statsCard
+                            .padding(.horizontal, 20)
 
-                    // 菜单选项
-                    menuOptions
-                        .padding(.horizontal, 20)
+                        // 菜单选项
+                        menuOptions
+                            .padding(.horizontal, 20)
 
-                    // 退出登录按钮
-                    signOutButton
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 40)
-                }
-            }
+                        // 退出登录按钮
+                        signOutButton
+                            .padding(.horizontal, 20)
 
-            // 加载遮罩
-            if isSigningOut {
-                ZStack {
-                    Color.black.opacity(0.5)
-                        .ignoresSafeArea()
-
-                    VStack(spacing: 16) {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .scaleEffect(1.5)
-
-                        Text("正在退出登录...")
-                            .foregroundColor(.white)
-                            .font(.subheadline)
+                        // 删除账户按钮
+                        deleteAccountButton
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 40)
                     }
-                    .padding(30)
-                    .background(ApocalypseTheme.cardBackground)
-                    .cornerRadius(16)
+                }
+
+                // 加载遮罩
+                if isSigningOut || isDeletingAccount {
+                    ZStack {
+                        Color.black.opacity(0.7)
+                            .ignoresSafeArea()
+
+                        VStack(spacing: 20) {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(1.5)
+
+                            Text(isSigningOut ? "正在退出登录..." : "正在删除账户...")
+                                .foregroundColor(.white)
+                                .font(.headline)
+
+                            if isDeletingAccount {
+                                Text("请稍候，这可能需要几秒钟")
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .font(.subheadline)
+                            }
+                        }
+                        .padding(40)
+                        .background(ApocalypseTheme.cardBackground)
+                        .cornerRadius(20)
+                    }
                 }
             }
-        }
-        .alert("确认退出", isPresented: $showSignOutAlert) {
-            Button("取消", role: .cancel) { }
-            Button("退出登录", role: .destructive) {
-                handleSignOut()
+            .alert("确认退出", isPresented: $showSignOutAlert) {
+                Button("取消", role: .cancel) { }
+                Button("退出登录", role: .destructive) {
+                    handleSignOut()
+                }
+            } message: {
+                Text("确定要退出登录吗？")
             }
-        } message: {
-            Text("确定要退出登录吗？")
+            .sheet(isPresented: $showDeleteAccountAlert) {
+                DeleteAccountConfirmationView(
+                    confirmationText: $deleteAccountConfirmationText,
+                    isPresented: $showDeleteAccountAlert,
+                    onConfirm: handleDeleteAccount
+                )
+            }
+            .alert("删除失败", isPresented: $showDeleteAccountError) {
+                Button("确定", role: .cancel) {
+                    deleteAccountError = nil
+                }
+            } message: {
+                Text(deleteAccountError ?? "未知错误")
+            }
         }
     }
 
@@ -152,12 +193,27 @@ struct ProfileTabView: View {
     // MARK: - 菜单选项
     private var menuOptions: some View {
         VStack(spacing: 0) {
-            MenuOptionRow(
-                icon: "gearshape.fill",
-                iconColor: .gray,
-                title: "设置",
-                action: {}
-            )
+            // 设置 - 带导航链接
+            NavigationLink(destination: SettingsView().environmentObject(authManager)) {
+                HStack(spacing: 16) {
+                    Image(systemName: "gearshape.fill")
+                        .font(.title3)
+                        .foregroundColor(.gray)
+                        .frame(width: 24)
+
+                    Text("设置")
+                        .font(.body)
+                        .foregroundColor(ApocalypseTheme.textPrimary)
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(ApocalypseTheme.textMuted)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+            }
 
             Divider()
                 .padding(.leading, 56)
@@ -243,6 +299,70 @@ struct ProfileTabView: View {
         }
     }
 
+    // MARK: - 删除账户按钮
+    private var deleteAccountButton: some View {
+        Button(action: {
+            print("🔴 用户点击删除账户按钮")
+            showDeleteAccountAlert = true
+        }) {
+            HStack(spacing: 12) {
+                Image(systemName: "trash.fill")
+                    .font(.headline)
+
+                Text("删除账户")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(ApocalypseTheme.cardBackground)
+            .foregroundColor(.red)
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.red.opacity(0.5), lineWidth: 1.5)
+            )
+        }
+        .disabled(isDeletingAccount)
+    }
+
+    // MARK: - 处理删除账户
+    private func handleDeleteAccount() {
+        print("⚠️ 用户确认删除账户，输入文本: \(deleteAccountConfirmationText)")
+
+        guard deleteAccountConfirmationText == "删除" else {
+            print("❌ 确认文本不匹配")
+            return
+        }
+
+        isDeletingAccount = true
+        deleteAccountConfirmationText = ""
+
+        Task {
+            do {
+                print("🗑️ 开始调用删除账户方法")
+                try await authManager.deleteAccount()
+
+                print("✅ 账户删除成功，即将返回登录页")
+
+                // 成功删除后，AuthManager 已经将 isAuthenticated 设为 false
+                // RootView 会自动跳转到登录页
+                await MainActor.run {
+                    isDeletingAccount = false
+                }
+
+            } catch {
+                print("❌ 删除账户失败: \(error.localizedDescription)")
+
+                await MainActor.run {
+                    isDeletingAccount = false
+                    deleteAccountError = error.localizedDescription
+                    showDeleteAccountError = true
+                }
+            }
+        }
+    }
+
     // MARK: - 辅助方法
 
     /// 从邮箱中提取用户名（邮箱 @ 前面的部分）
@@ -307,6 +427,137 @@ struct MenuOptionRow: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 14)
+        }
+    }
+}
+
+// MARK: - 删除账户确认对话框
+struct DeleteAccountConfirmationView: View {
+    @Binding var confirmationText: String
+    @Binding var isPresented: Bool
+    let onConfirm: () -> Void
+
+    var body: some View {
+        ZStack {
+            // 背景
+            ApocalypseTheme.background.ignoresSafeArea()
+
+            VStack(spacing: 24) {
+                // 警告图标
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 60))
+                    .foregroundColor(.red)
+                    .padding(.top, 40)
+
+                // 标题
+                Text("删除账户")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundColor(ApocalypseTheme.textPrimary)
+
+                // 警告信息
+                VStack(spacing: 12) {
+                    Text("此操作不可撤销！")
+                        .font(.headline)
+                        .foregroundColor(.red)
+
+                    Text("您的所有数据将被永久删除，包括：")
+                        .font(.subheadline)
+                        .foregroundColor(ApocalypseTheme.textSecondary)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        DeleteInfoItem(text: "账户信息")
+                        DeleteInfoItem(text: "游戏进度")
+                        DeleteInfoItem(text: "领地数据")
+                        DeleteInfoItem(text: "所有资源")
+                    }
+                    .padding(.vertical, 8)
+                }
+                .padding(.horizontal, 20)
+
+                // 输入框
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("请输入\"删除\"以确认此操作")
+                        .font(.caption)
+                        .foregroundColor(ApocalypseTheme.textSecondary)
+
+                    TextField("删除", text: $confirmationText)
+                        .padding()
+                        .background(ApocalypseTheme.cardBackground)
+                        .cornerRadius(8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(
+                                    confirmationText == "删除" ? Color.red : ApocalypseTheme.textMuted.opacity(0.3),
+                                    lineWidth: 1
+                                )
+                        )
+                        .autocorrectionDisabled()
+                }
+                .padding(.horizontal, 20)
+
+                Spacer()
+
+                // 按钮组
+                VStack(spacing: 12) {
+                    // 确认删除按钮
+                    Button(action: {
+                        onConfirm()
+                        isPresented = false
+                    }) {
+                        Text("确认删除")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(
+                                confirmationText == "删除"
+                                    ? Color.red
+                                    : Color.gray.opacity(0.3)
+                            )
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                    }
+                    .disabled(confirmationText != "删除")
+
+                    // 取消按钮
+                    Button(action: {
+                        confirmationText = ""
+                        isPresented = false
+                    }) {
+                        Text("取消")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(ApocalypseTheme.cardBackground)
+                            .foregroundColor(ApocalypseTheme.textPrimary)
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(ApocalypseTheme.textMuted.opacity(0.3), lineWidth: 1)
+                            )
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 40)
+            }
+        }
+    }
+}
+
+// MARK: - 删除信息项组件
+struct DeleteInfoItem: View {
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "xmark.circle.fill")
+                .font(.caption)
+                .foregroundColor(.red)
+
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(ApocalypseTheme.textSecondary)
         }
     }
 }

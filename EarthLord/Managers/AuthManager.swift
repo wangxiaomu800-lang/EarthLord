@@ -526,6 +526,106 @@ class AuthManager: ObservableObject {
         }
         return (true, nil)
     }
+
+    // MARK: - 删除账户
+
+    /// 删除用户账户
+    /// ⚠️ 警告：此操作不可逆，将永久删除用户数据
+    func deleteAccount() async throws {
+        await MainActor.run {
+            isLoading = true
+            errorMessage = nil
+        }
+
+        print("🗑️ 开始删除账户流程")
+
+        defer {
+            Task { @MainActor in
+                isLoading = false
+            }
+        }
+
+        do {
+            // 获取当前会话
+            let session = try await supabase.auth.session
+            let accessToken = session.accessToken
+
+            print("📝 获取到用户 token: \(String(accessToken.prefix(20)))...")
+            print("📝 用户 ID: \(session.user.id)")
+
+            // 调用边缘函数删除账户
+            let functionURL = URL(string: "https://vuqfufnrxzsmkzmhtuhw.supabase.co/functions/v1/delete-account")!
+
+            var request = URLRequest(url: functionURL)
+            request.httpMethod = "POST"
+            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.timeoutInterval = 30
+
+            print("🌐 发送删除账户请求到: \(functionURL)")
+
+            let (data, response) = try await URLSession.shared.data(for: request)
+
+            // 打印响应数据用于调试
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("📦 响应数据: \(responseString)")
+            }
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("❌ 无效的 HTTP 响应")
+                throw NSError(domain: "DeleteAccount", code: -1, userInfo: [NSLocalizedDescriptionKey: "无效的服务器响应"])
+            }
+
+            print("📡 边缘函数响应状态码: \(httpResponse.statusCode)")
+
+            if httpResponse.statusCode == 200 {
+                // 删除成功
+                print("✅ 账户删除成功")
+
+                // 清空本地状态
+                await MainActor.run {
+                    currentUser = nil
+                    isAuthenticated = false
+                    needsPasswordSetup = false
+                    otpSent = false
+                    otpVerified = false
+                    errorMessage = nil
+                }
+
+                print("🧹 本地状态已清空，将返回登录页")
+
+            } else {
+                // 删除失败 - 解析错误信息
+                var errorMsg = "删除账户失败"
+
+                if let errorJSON = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    if let error = errorJSON["error"] as? String {
+                        errorMsg = error
+                    }
+                    print("❌ 服务器返回错误: \(errorJSON)")
+                } else {
+                    print("❌ 无法解析错误响应，状态码: \(httpResponse.statusCode)")
+                }
+
+                throw NSError(
+                    domain: "DeleteAccount",
+                    code: httpResponse.statusCode,
+                    userInfo: [NSLocalizedDescriptionKey: errorMsg]
+                )
+            }
+
+        } catch let error as NSError {
+            print("❌ 删除账户时发生错误: \(error)")
+            print("   错误域: \(error.domain)")
+            print("   错误代码: \(error.code)")
+            print("   错误描述: \(error.localizedDescription)")
+
+            await MainActor.run {
+                errorMessage = error.localizedDescription
+            }
+            throw error
+        }
+    }
 }
 
 // MARK: - Preview Helper
