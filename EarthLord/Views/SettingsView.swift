@@ -33,7 +33,7 @@ struct SettingsView: View {
                 }
             }
         }
-        .navigationTitle("设置".localized)
+        .navigationTitle("设置")
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showLanguagePicker) {
             languagePickerSheet
@@ -47,7 +47,7 @@ struct SettingsView: View {
             HStack {
                 Image(systemName: "globe")
                     .foregroundColor(ApocalypseTheme.primary)
-                Text("语言设置".localized)
+                Text("语言设置")
                     .font(.headline)
                     .foregroundColor(ApocalypseTheme.textPrimary)
                 Spacer()
@@ -63,7 +63,7 @@ struct SettingsView: View {
                 showLanguagePicker = true
             }) {
                 HStack {
-                    Text("当前语言".localized)
+                    Text("当前语言")
                         .foregroundColor(ApocalypseTheme.textSecondary)
 
                     Spacer()
@@ -106,11 +106,11 @@ struct SettingsView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("选择语言".localized)
+            .navigationTitle("选择语言")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成".localized) {
+                    Button("完成") {
                         showLanguagePicker = false
                     }
                     .foregroundColor(ApocalypseTheme.primary)
@@ -138,7 +138,7 @@ struct SettingsView: View {
                         .foregroundColor(ApocalypseTheme.textPrimary)
 
                     if language == .system {
-                        Text("跟随系统语言设置".localized)
+                        Text("跟随系统语言设置")
                             .font(.caption)
                             .foregroundColor(ApocalypseTheme.textSecondary)
                     }
@@ -166,16 +166,16 @@ struct SettingsView: View {
                 .font(.system(size: 50))
                 .foregroundColor(ApocalypseTheme.primary)
 
-            Text("地球新主".localized)
+            Text("地球新主")
                 .font(.title3)
                 .fontWeight(.bold)
                 .foregroundColor(ApocalypseTheme.textPrimary)
 
-            Text("版本 1.0.0".localized)
+            Text("版本 1.0.0")
                 .font(.caption)
                 .foregroundColor(ApocalypseTheme.textSecondary)
 
-            Text("生存游戏 · 探索未知".localized)
+            Text("生存游戏 · 探索未知")
                 .font(.caption2)
                 .foregroundColor(ApocalypseTheme.textMuted)
         }

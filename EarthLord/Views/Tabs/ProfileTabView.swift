@@ -379,7 +379,7 @@ struct ProfileTabView: View {
 struct StatItem: View {
     let icon: String
     let value: String
-    let label: String
+    let label: LocalizedStringKey
 
     var body: some View {
         VStack(spacing: 8) {
@@ -404,7 +404,7 @@ struct StatItem: View {
 struct MenuOptionRow: View {
     let icon: String
     let iconColor: Color
-    let title: String
+    let title: LocalizedStringKey
     let action: () -> Void
 
     var body: some View {
@@ -547,7 +547,7 @@ struct DeleteAccountConfirmationView: View {
 
 // MARK: - 删除信息项组件
 struct DeleteInfoItem: View {
-    let text: String
+    let text: LocalizedStringKey
 
     var body: some View {
         HStack(spacing: 8) {

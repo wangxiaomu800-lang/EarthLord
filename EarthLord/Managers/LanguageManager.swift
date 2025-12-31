@@ -51,23 +51,32 @@ class LanguageManager: ObservableObject {
     @Published var currentLanguage: AppLanguage {
         didSet {
             saveLanguage()
+            updateLocale()
             print("🌍 语言已切换到: \(currentLanguage.displayName)")
         }
     }
+
+    /// 当前的 Locale（用于 SwiftUI environment）
+    @Published var currentLocale: Locale
 
     /// UserDefaults 键
     private let languageKey = "app_language"
 
     private init() {
         // 从 UserDefaults 加载语言设置
+        let language: AppLanguage
         if let savedLanguage = UserDefaults.standard.string(forKey: languageKey),
-           let language = AppLanguage(rawValue: savedLanguage) {
-            self.currentLanguage = language
-            print("🌍 加载已保存的语言设置: \(language.displayName)")
+           let loadedLanguage = AppLanguage(rawValue: savedLanguage) {
+            language = loadedLanguage
+            print("🌍 加载已保存的语言设置: \(loadedLanguage.displayName)")
         } else {
-            self.currentLanguage = .system
+            language = .system
             print("🌍 使用默认语言设置: 跟随系统")
         }
+
+        // 初始化所有存储属性
+        self.currentLanguage = language
+        self.currentLocale = Self.getLocale(for: language)
     }
 
     /// 保存语言设置
@@ -76,43 +85,27 @@ class LanguageManager: ObservableObject {
         print("💾 语言设置已保存: \(currentLanguage.rawValue)")
     }
 
+    /// 更新 Locale
+    private func updateLocale() {
+        currentLocale = Self.getLocale(for: currentLanguage)
+        print("🌐 Locale 已更新: \(currentLocale.identifier)")
+    }
+
     /// 切换语言
     func changeLanguage(to language: AppLanguage) {
         currentLanguage = language
     }
 
-    /// 获取本地化字符串
-    func localizedString(_ key: String) -> String {
-        guard let languageCode = currentLanguage.languageCode else {
-            return NSLocalizedString(key, comment: "")
+    /// 获取指定语言的 Locale
+    private static func getLocale(for language: AppLanguage) -> Locale {
+        switch language {
+        case .system:
+            return Locale.current
+        case .chinese:
+            return Locale(identifier: "zh-Hans")
+        case .english:
+            return Locale(identifier: "en")
         }
-
-        // 如果是跟随系统，使用系统默认的本地化
-        if currentLanguage == .system {
-            return NSLocalizedString(key, comment: "")
-        }
-
-        // 获取指定语言的 bundle
-        guard let path = Bundle.main.path(forResource: languageCode, ofType: "lproj"),
-              let bundle = Bundle(path: path) else {
-            print("⚠️ 未找到语言包: \(languageCode)，使用默认语言")
-            return NSLocalizedString(key, comment: "")
-        }
-
-        return bundle.localizedString(forKey: key, value: nil, table: nil)
     }
 }
 
-/// String 扩展 - 支持自定义语言切换
-extension String {
-    /// 获取本地化字符串
-    var localized: String {
-        LanguageManager.shared.localizedString(self)
-    }
-
-    /// 获取本地化字符串（带参数）
-    func localized(_ arguments: CVarArg...) -> String {
-        let format = LanguageManager.shared.localizedString(self)
-        return String(format: format, arguments: arguments)
-    }
-}
