@@ -15,6 +15,12 @@ struct MapTabView: View {
     /// 定位管理器
     @ObservedObject var locationManager = LocationManager.shared
 
+    /// 语言管理器（监听语言变化）
+    @ObservedObject var languageManager = LanguageManager.shared
+
+    /// 地图视图的唯一标识（用于强制重建地图）
+    @State private var mapID = UUID()
+
     /// 用户位置
     @State private var userLocation: CLLocationCoordinate2D?
 
@@ -38,6 +44,7 @@ struct MapTabView: View {
                     userLocation: $userLocation,
                     hasLocatedUser: $hasLocatedUser
                 )
+                .id(mapID) // 当 mapID 变化时，强制重建整个地图视图
                 .ignoresSafeArea()
             } else {
                 // 未授权：显示占位视图
@@ -66,6 +73,9 @@ struct MapTabView: View {
         }
         .onAppear {
             handleOnAppear()
+        }
+        .onChange(of: languageManager.currentLanguage) { oldValue, newValue in
+            handleLanguageChange(from: oldValue, to: newValue)
         }
         .alert("需要定位权限", isPresented: $showSettingsAlert) {
             Button("取消", role: .cancel) { }
@@ -227,6 +237,19 @@ struct MapTabView: View {
         if let url = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(url)
         }
+    }
+
+    /// 处理语言变化
+    private func handleLanguageChange(from oldLanguage: AppLanguage, to newLanguage: AppLanguage) {
+        print("🌍 地图检测到语言变化: \(oldLanguage.rawValue) -> \(newLanguage.rawValue)")
+
+        // 强制重建地图视图（清除所有缓存的地图图块）
+        mapID = UUID()
+
+        // 重置定位状态，以便在新地图上重新定位
+        hasLocatedUser = false
+
+        print("🗺️ 地图视图已重建以应用新语言")
     }
 }
 
