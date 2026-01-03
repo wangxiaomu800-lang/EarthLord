@@ -214,7 +214,7 @@ struct MapTabView: View {
 
     /// 重新居中地图（用户手动点击定位按钮）
     private func recenterMap() {
-        guard let location = userLocation else {
+        guard userLocation != nil else {
             print("⚠️ 没有用户位置，无法居中")
             return
         }

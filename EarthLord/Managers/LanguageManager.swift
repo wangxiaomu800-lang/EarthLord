@@ -163,7 +163,7 @@ extension Bundle {
 }
 
 /// 自定义 Bundle 类（用于语言切换）
-private class CustomBundle: Bundle {
+private class CustomBundle: Bundle, @unchecked Sendable {
     override func localizedString(forKey key: String, value: String?, table tableName: String?) -> String {
         guard let language = currentLanguage,
               let path = Bundle.main.path(forResource: language, ofType: "lproj"),
