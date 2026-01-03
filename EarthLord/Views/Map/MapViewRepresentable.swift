@@ -17,6 +17,9 @@ struct MapViewRepresentable: UIViewRepresentable {
     /// 是否已完成首次定位（绑定）
     @Binding var hasLocatedUser: Bool
 
+    /// 语言管理器（用于监听语言变化）
+    @ObservedObject var languageManager = LanguageManager.shared
+
     // MARK: - UIViewRepresentable
 
     /// 创建 MKMapView
@@ -33,6 +36,10 @@ struct MapViewRepresentable: UIViewRepresentable {
         mapView.isRotateEnabled = true // 允许旋转
         mapView.isPitchEnabled = false // 禁用3D倾斜视角
 
+        // 注意：MKMapView 的地名标签语言由 Apple Maps 服务器控制
+        // 需要通过改变整个应用的语言环境来影响地图语言
+        // 这将在下面通过设置 overrideUserInterfaceStyle 的父视图来处理
+
         // 设置代理（关键！用于接收位置更新）
         mapView.delegate = context.coordinator
 
@@ -44,9 +51,25 @@ struct MapViewRepresentable: UIViewRepresentable {
         return mapView
     }
 
-    /// 更新地图（空实现即可）
+    /// 更新地图
     func updateUIView(_ mapView: MKMapView, context: Context) {
-        // 地图更新由 Coordinator 的代理方法处理
+        // 当语言变化时，重新加载地图图块以显示新语言的地名
+        // 通过切换地图类型来强制重新加载
+        if context.coordinator.lastLanguage != languageManager.currentLanguage {
+            context.coordinator.lastLanguage = languageManager.currentLanguage
+
+            // 保存当前的地图类型
+            let currentMapType = mapView.mapType
+
+            // 临时切换地图类型
+            mapView.mapType = .standard
+
+            // 异步切换回原来的类型（强制重新加载地图图块）
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                mapView.mapType = currentMapType
+                print("🌍 地图已重新加载以应用新语言")
+            }
+        }
     }
 
     /// 创建协调器
@@ -84,8 +107,12 @@ struct MapViewRepresentable: UIViewRepresentable {
         /// 是否已完成首次居中（防止重复居中）
         private var hasInitialCentered = false
 
+        /// 上次的语言设置（用于检测语言变化）
+        var lastLanguage: AppLanguage?
+
         init(_ parent: MapViewRepresentable) {
             self.parent = parent
+            self.lastLanguage = parent.languageManager.currentLanguage
         }
 
         // MARK: - MKMapViewDelegate

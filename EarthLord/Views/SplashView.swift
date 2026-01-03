@@ -9,7 +9,7 @@ struct SplashView: View {
     @State private var isAnimating = false
 
     /// 加载进度文字
-    @State private var loadingText = "正在初始化..."
+    @State private var loadingText = NSLocalizedString("正在初始化...", comment: "")
 
     /// Logo 缩放动画
     @State private var logoScale: CGFloat = 0.8
@@ -151,7 +151,7 @@ struct SplashView: View {
         Task {
             // 第一步：检查会话
             await MainActor.run {
-                loadingText = "正在检查登录状态..."
+                loadingText = NSLocalizedString("正在检查登录状态...", comment: "")
             }
 
             // 等待一小段时间让 authStateChanges 触发
@@ -163,13 +163,13 @@ struct SplashView: View {
             // 第二步：加载资源
             try? await Task.sleep(nanoseconds: 600_000_000) // 0.6秒
             await MainActor.run {
-                loadingText = "正在加载资源..."
+                loadingText = NSLocalizedString("正在加载资源...", comment: "")
             }
 
             // 第三步：准备就绪
             try? await Task.sleep(nanoseconds: 600_000_000) // 0.6秒
             await MainActor.run {
-                loadingText = "准备就绪"
+                loadingText = NSLocalizedString("准备就绪", comment: "")
             }
 
             // 完成加载，进入下一阶段

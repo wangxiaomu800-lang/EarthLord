@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Combine
+import Foundation
 
 /// 语言选项
 enum AppLanguage: String, CaseIterable, Identifiable {
@@ -77,6 +78,9 @@ class LanguageManager: ObservableObject {
         // 初始化所有存储属性
         self.currentLanguage = language
         self.currentLocale = Self.getLocale(for: language)
+
+        // 应用语言设置（包括 UIKit 组件）
+        setAppLanguage(language)
     }
 
     /// 保存语言设置
@@ -94,6 +98,9 @@ class LanguageManager: ObservableObject {
     /// 切换语言
     func changeLanguage(to language: AppLanguage) {
         currentLanguage = language
+
+        // 设置应用语言（用于影响 UIKit 组件，如 MKMapView）
+        setAppLanguage(language)
     }
 
     /// 获取指定语言的 Locale
@@ -106,6 +113,65 @@ class LanguageManager: ObservableObject {
         case .english:
             return Locale(identifier: "en")
         }
+    }
+
+    /// 设置应用的语言环境（影响 UIKit 组件）
+    private func setAppLanguage(_ language: AppLanguage) {
+        var languages: [String] = []
+
+        switch language {
+        case .system:
+            // 跟随系统时，使用系统的首选语言
+            languages = Locale.preferredLanguages
+        case .chinese:
+            languages = ["zh-Hans", "zh-CN"]
+        case .english:
+            languages = ["en", "en-US"]
+        }
+
+        // 设置 UserDefaults 的 AppleLanguages
+        UserDefaults.standard.set(languages, forKey: "AppleLanguages")
+        UserDefaults.standard.synchronize()
+
+        // 重新加载 Bundle（使用 swizzling 技术）
+        Bundle.setLanguage(languages.first)
+
+        print("🌍 应用语言环境已设置为: \(languages)")
+    }
+}
+
+// MARK: - Bundle 扩展（支持运行时语言切换）
+
+private var bundleKey: UInt8 = 0
+
+extension Bundle {
+    /// 设置 Bundle 的语言
+    static func setLanguage(_ language: String?) {
+        defer {
+            // 清除缓存，强制重新加载
+            object_setClass(Bundle.main, CustomBundle.self)
+        }
+
+        // 存储当前语言
+        objc_setAssociatedObject(Bundle.main, &bundleKey, language, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+    }
+
+    /// 获取当前 Bundle 语言
+    var currentLanguage: String? {
+        return objc_getAssociatedObject(self, &bundleKey) as? String
+    }
+}
+
+/// 自定义 Bundle 类（用于语言切换）
+private class CustomBundle: Bundle {
+    override func localizedString(forKey key: String, value: String?, table tableName: String?) -> String {
+        guard let language = currentLanguage,
+              let path = Bundle.main.path(forResource: language, ofType: "lproj"),
+              let bundle = Bundle(path: path) else {
+            return super.localizedString(forKey: key, value: value, table: tableName)
+        }
+
+        return bundle.localizedString(forKey: key, value: value, table: tableName)
     }
 }
 
