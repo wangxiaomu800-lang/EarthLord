@@ -42,7 +42,10 @@ struct MapTabView: View {
                 // 已授权：显示地图
                 MapViewRepresentable(
                     userLocation: $userLocation,
-                    hasLocatedUser: $hasLocatedUser
+                    hasLocatedUser: $hasLocatedUser,
+                    trackingPath: $locationManager.pathCoordinates,
+                    pathUpdateVersion: locationManager.pathUpdateVersion,
+                    isTracking: locationManager.isTracking
                 )
                 .id(mapID) // 当 mapID 变化时，强制重建整个地图视图
                 .ignoresSafeArea()
@@ -51,7 +54,7 @@ struct MapTabView: View {
                 permissionPromptView
             }
 
-            // 右下角：定位按钮
+            // 右下角：按钮组
             VStack {
                 Spacer()
 
@@ -59,9 +62,15 @@ struct MapTabView: View {
                     Spacer()
 
                     if locationManager.isAuthorized {
-                        locateButton
-                            .padding(.trailing, 20)
-                            .padding(.bottom, 100) // 避免遮挡标签栏
+                        VStack(spacing: 16) {
+                            // 圈地按钮
+                            trackingButton
+
+                            // 定位按钮
+                            locateButton
+                        }
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 100) // 避免遮挡标签栏
                     }
                 }
             }
@@ -179,6 +188,41 @@ struct MapTabView: View {
         .padding(.horizontal, 40)
     }
 
+    /// 圈地按钮
+    private var trackingButton: some View {
+        Button(action: {
+            toggleTracking()
+        }) {
+            HStack(spacing: 8) {
+                // 图标
+                Image(systemName: locationManager.isTracking ? "stop.fill" : "flag.fill")
+                    .font(.system(size: 16))
+
+                // 文本
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(locationManager.isTracking ? "停止圈地" : "开始圈地")
+                        .font(.system(size: 14, weight: .semibold))
+
+                    // 追踪中显示点数
+                    if locationManager.isTracking {
+                        Text("\(locationManager.pathCoordinates.count) 点")
+                            .font(.system(size: 11))
+                    }
+                }
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                locationManager.isTracking
+                    ? Color.red
+                    : ApocalypseTheme.primary
+            )
+            .cornerRadius(25)
+            .shadow(color: .black.opacity(0.3), radius: 5)
+        }
+    }
+
     /// 定位按钮
     private var locateButton: some View {
         Button(action: {
@@ -229,6 +273,19 @@ struct MapTabView: View {
         // 延迟一帧后恢复状态
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             hasLocatedUser = true
+        }
+    }
+
+    /// 切换路径追踪状态
+    private func toggleTracking() {
+        if locationManager.isTracking {
+            // 停止追踪
+            locationManager.stopPathTracking()
+            print("🛑 用户停止圈地")
+        } else {
+            // 开始追踪
+            locationManager.startPathTracking()
+            print("🚩 用户开始圈地")
         }
     }
 

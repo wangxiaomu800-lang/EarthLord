@@ -17,6 +17,15 @@ struct MapViewRepresentable: UIViewRepresentable {
     /// 是否已完成首次定位（绑定）
     @Binding var hasLocatedUser: Bool
 
+    /// 追踪路径坐标数组（绑定）
+    @Binding var trackingPath: [CLLocationCoordinate2D]
+
+    /// 路径更新版本号
+    var pathUpdateVersion: Int
+
+    /// 是否正在追踪
+    var isTracking: Bool
+
     // MARK: - UIViewRepresentable
 
     /// 创建 MKMapView
@@ -52,11 +61,41 @@ struct MapViewRepresentable: UIViewRepresentable {
     func updateUIView(_ mapView: MKMapView, context: Context) {
         // 地图更新由 Coordinator 的代理方法处理
         // 语言切换时，整个地图视图会通过 .id() 修饰符被重建，因此不需要在这里处理
+
+        // 更新追踪路径
+        updateTrackingPath(mapView: mapView, context: context)
     }
 
     /// 创建协调器
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
+    }
+
+    // MARK: - 轨迹更新
+
+    /// 更新追踪路径
+    private func updateTrackingPath(mapView: MKMapView, context: Context) {
+        // 检查路径版本是否变化
+        if context.coordinator.lastPathVersion != pathUpdateVersion {
+            context.coordinator.lastPathVersion = pathUpdateVersion
+
+            // 移除旧的轨迹
+            let oldOverlays = mapView.overlays.filter { $0 is MKPolyline }
+            mapView.removeOverlays(oldOverlays)
+
+            // 如果有新路径，绘制新轨迹
+            if trackingPath.count >= 2 {
+                // ⭐ 关键：将 WGS-84 坐标转换为 GCJ-02 坐标
+                // 中国区需要手动转换坐标才能准确显示
+                let gcj02Coordinates = CoordinateConverter.wgs84ToGcj02(trackingPath)
+
+                // 创建轨迹线
+                let polyline = MKPolyline(coordinates: gcj02Coordinates, count: gcj02Coordinates.count)
+                mapView.addOverlay(polyline)
+
+                print("🎨 已绘制轨迹，共 \(trackingPath.count) 个点（已转换坐标）")
+            }
+        }
     }
 
     // MARK: - 滤镜效果
@@ -88,6 +127,9 @@ struct MapViewRepresentable: UIViewRepresentable {
 
         /// 是否已完成首次居中（防止重复居中）
         private var hasInitialCentered = false
+
+        /// 上次的路径版本号（用于检测路径变化）
+        var lastPathVersion: Int = 0
 
         init(_ parent: MapViewRepresentable) {
             self.parent = parent
@@ -148,6 +190,28 @@ struct MapViewRepresentable: UIViewRepresentable {
         /// 地图加载失败时调用
         func mapViewDidFailLoadingMap(_ mapView: MKMapView, withError error: Error) {
             print("❌ 地图加载失败: \(error.localizedDescription)")
+        }
+
+        // MARK: - 轨迹渲染
+
+        /// ⭐ 关键方法：渲染覆盖物（轨迹线）
+        /// 如果不实现这个方法，轨迹添加了也看不见！
+        func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            if let polyline = overlay as? MKPolyline {
+                // 创建轨迹线渲染器
+                let renderer = MKPolylineRenderer(polyline: polyline)
+
+                // 设置轨迹样式
+                renderer.strokeColor = UIColor.cyan // 青色轨迹
+                renderer.lineWidth = 5 // 线宽5pt
+                renderer.lineCap = .round // 圆头
+                renderer.alpha = 0.8 // 透明度
+
+                return renderer
+            }
+
+            // 默认渲染器
+            return MKOverlayRenderer(overlay: overlay)
         }
     }
 }
