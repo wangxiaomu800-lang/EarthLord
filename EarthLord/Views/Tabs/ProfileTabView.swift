@@ -5,6 +5,9 @@ struct ProfileTabView: View {
     /// 认证管理器
     @EnvironmentObject var authManager: AuthManager
 
+    /// 定位管理器（用于显示领地数）
+    @ObservedObject var locationManager = LocationManager.shared
+
     /// 是否显示退出确认对话框
     @State private var showSignOutAlert = false
 
@@ -159,7 +162,7 @@ struct ProfileTabView: View {
             // 领地
             StatItem(
                 icon: "flag.fill",
-                value: "0",
+                value: "\(locationManager.territoryCount)",
                 label: "领地"
             )
 

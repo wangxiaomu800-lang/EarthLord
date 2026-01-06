@@ -45,7 +45,8 @@ struct MapTabView: View {
                     hasLocatedUser: $hasLocatedUser,
                     trackingPath: $locationManager.pathCoordinates,
                     pathUpdateVersion: locationManager.pathUpdateVersion,
-                    isTracking: locationManager.isTracking
+                    isTracking: locationManager.isTracking,
+                    isPathClosed: locationManager.isPathClosed
                 )
                 .id(mapID) // 当 mapID 变化时，强制重建整个地图视图
                 .ignoresSafeArea()
@@ -79,9 +80,26 @@ struct MapTabView: View {
             if locationManager.isDenied {
                 deniedPermissionCard
             }
+
+            // 速度警告横幅
+            if let warning = locationManager.speedWarning {
+                VStack {
+                    speedWarningBanner(warning: warning)
+                        .padding(.top, 60) // 避免遮挡状态栏
+                    Spacer()
+                }
+            }
         }
         .onAppear {
             handleOnAppear()
+        }
+        .onChange(of: locationManager.speedWarning) { _, newWarning in
+            // 警告出现后 3 秒自动消失
+            if newWarning != nil {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    locationManager.speedWarning = nil
+                }
+            }
         }
         .onChange(of: languageManager.currentLanguage) { oldValue, newValue in
             handleLanguageChange(from: oldValue, to: newValue)
@@ -236,6 +254,36 @@ struct MapTabView: View {
                 .cornerRadius(25)
                 .shadow(color: .black.opacity(0.3), radius: 5)
         }
+    }
+
+    /// 速度警告横幅
+    private func speedWarningBanner(warning: String) -> some View {
+        HStack(spacing: 12) {
+            // 警告图标
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 20))
+                .foregroundColor(.white)
+
+            // 警告文字
+            Text(warning)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.white)
+
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(
+            // 根据是否还在追踪显示不同颜色
+            locationManager.isTracking
+                ? Color.orange // 警告：橙色
+                : Color.red    // 已停止：红色
+        )
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.3), radius: 8)
+        .padding(.horizontal, 20)
+        .transition(.move(edge: .top).combined(with: .opacity))
+        .animation(.spring(), value: locationManager.speedWarning)
     }
 
     // MARK: - 方法

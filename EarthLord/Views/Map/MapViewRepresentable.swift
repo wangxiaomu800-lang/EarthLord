@@ -26,6 +26,9 @@ struct MapViewRepresentable: UIViewRepresentable {
     /// 是否正在追踪
     var isTracking: Bool
 
+    /// 路径是否闭合
+    var isPathClosed: Bool
+
     // MARK: - UIViewRepresentable
 
     /// 创建 MKMapView
@@ -79,9 +82,8 @@ struct MapViewRepresentable: UIViewRepresentable {
         if context.coordinator.lastPathVersion != pathUpdateVersion {
             context.coordinator.lastPathVersion = pathUpdateVersion
 
-            // 移除旧的轨迹
-            let oldOverlays = mapView.overlays.filter { $0 is MKPolyline }
-            mapView.removeOverlays(oldOverlays)
+            // 移除旧的轨迹和多边形
+            mapView.removeOverlays(mapView.overlays)
 
             // 如果有新路径，绘制新轨迹
             if trackingPath.count >= 2 {
@@ -94,6 +96,13 @@ struct MapViewRepresentable: UIViewRepresentable {
                 mapView.addOverlay(polyline)
 
                 print("🎨 已绘制轨迹，共 \(trackingPath.count) 个点（已转换坐标）")
+
+                // 如果已闭环且点数足够，绘制多边形填充
+                if isPathClosed && trackingPath.count >= 3 {
+                    let polygon = MKPolygon(coordinates: gcj02Coordinates, count: gcj02Coordinates.count)
+                    mapView.addOverlay(polygon)
+                    print("🟢 已绘制闭环多边形")
+                }
             }
         }
     }
@@ -194,18 +203,36 @@ struct MapViewRepresentable: UIViewRepresentable {
 
         // MARK: - 轨迹渲染
 
-        /// ⭐ 关键方法：渲染覆盖物（轨迹线）
+        /// ⭐ 关键方法：渲染覆盖物（轨迹线和多边形）
         /// 如果不实现这个方法，轨迹添加了也看不见！
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            // 渲染轨迹线
             if let polyline = overlay as? MKPolyline {
-                // 创建轨迹线渲染器
                 let renderer = MKPolylineRenderer(polyline: polyline)
 
-                // 设置轨迹样式
-                renderer.strokeColor = UIColor.cyan // 青色轨迹
+                // 根据是否闭环设置颜色
+                if parent.isPathClosed {
+                    renderer.strokeColor = UIColor.systemGreen // 闭环：绿色
+                } else {
+                    renderer.strokeColor = UIColor.systemCyan // 未闭环：青色
+                }
+
                 renderer.lineWidth = 5 // 线宽5pt
                 renderer.lineCap = .round // 圆头
                 renderer.alpha = 0.8 // 透明度
+
+                return renderer
+            }
+
+            // 渲染多边形填充
+            if let polygon = overlay as? MKPolygon {
+                let renderer = MKPolygonRenderer(polygon: polygon)
+
+                // 填充色：半透明绿色
+                renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
+                // 边框色：绿色
+                renderer.strokeColor = UIColor.systemGreen
+                renderer.lineWidth = 2
 
                 return renderer
             }

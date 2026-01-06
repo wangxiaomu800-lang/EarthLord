@@ -4,14 +4,14 @@ struct MoreTabView: View {
     var body: some View {
         NavigationView {
             List {
-                NavigationLink(destination: SupabaseTestView()) {
+                NavigationLink(destination: TestMenuView()) {
                     HStack {
-                        Image(systemName: "network")
-                            .foregroundColor(.blue)
+                        Image(systemName: "hammer.fill")
+                            .foregroundColor(.orange)
                         VStack(alignment: .leading) {
-                            Text("Supabase 连接测试")
+                            Text("开发测试")
                                 .font(.headline)
-                            Text("测试数据库连接状态")
+                            Text("Supabase 和圈地功能测试")
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         }
