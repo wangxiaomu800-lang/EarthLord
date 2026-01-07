@@ -8,6 +8,8 @@
 
 import SwiftUI
 import MapKit
+import Supabase
+import Auth
 
 struct MapTabView: View {
     // MARK: - 状态属性
@@ -36,6 +38,12 @@ struct MapTabView: View {
     /// 领地管理器
     @ObservedObject var territoryManager = TerritoryManager.shared
 
+    /// 认证管理器
+    @EnvironmentObject var authManager: AuthManager
+
+    /// 已加载的领地列表
+    @State private var territories: [Territory] = []
+
     /// 是否正在上传
     @State private var isUploading = false
 
@@ -59,7 +67,9 @@ struct MapTabView: View {
                     trackingPath: $locationManager.pathCoordinates,
                     pathUpdateVersion: locationManager.pathUpdateVersion,
                     isTracking: locationManager.isTracking,
-                    isPathClosed: locationManager.isPathClosed
+                    isPathClosed: locationManager.isPathClosed,
+                    territories: territories,
+                    currentUserId: authManager.currentUser?.id.uuidString
                 )
                 .id(mapID) // 当 mapID 变化时，强制重建整个地图视图
                 .ignoresSafeArea()
@@ -431,6 +441,11 @@ struct MapTabView: View {
             print("🗺️ 已授权，开始定位")
             locationManager.startUpdatingLocation()
         }
+
+        // 加载领地
+        Task {
+            await loadTerritories()
+        }
     }
 
     /// 重新居中地图（用户手动点击定位按钮）
@@ -503,6 +518,9 @@ struct MapTabView: View {
             // ⚠️ 关键：上传成功后必须停止追踪并清空状态
             locationManager.stopPathTracking()
 
+            // 刷新领地列表
+            await loadTerritories()
+
         } catch {
             // 上传失败
             showUploadError("上传失败: \(error.localizedDescription)")
@@ -539,6 +557,16 @@ struct MapTabView: View {
             withAnimation {
                 showUploadMessage = false
             }
+        }
+    }
+
+    /// 加载所有领地
+    private func loadTerritories() async {
+        do {
+            territories = try await territoryManager.loadAllTerritories()
+            TerritoryLogger.shared.log("加载了 \(territories.count) 个领地", type: .info)
+        } catch {
+            TerritoryLogger.shared.log("加载领地失败: \(error.localizedDescription)", type: .error)
         }
     }
 

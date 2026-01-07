@@ -29,6 +29,12 @@ struct MapViewRepresentable: UIViewRepresentable {
     /// 路径是否闭合
     var isPathClosed: Bool
 
+    /// 已加载的领地列表
+    var territories: [Territory]
+
+    /// 当前用户 ID
+    var currentUserId: String?
+
     // MARK: - UIViewRepresentable
 
     /// 创建 MKMapView
@@ -67,6 +73,9 @@ struct MapViewRepresentable: UIViewRepresentable {
 
         // 更新追踪路径
         updateTrackingPath(mapView: mapView, context: context)
+
+        // 绘制领地
+        drawTerritories(on: mapView)
     }
 
     /// 创建协调器
@@ -104,6 +113,44 @@ struct MapViewRepresentable: UIViewRepresentable {
                     print("🟢 已绘制闭环多边形")
                 }
             }
+        }
+    }
+
+    // MARK: - 领地绘制
+
+    /// 绘制领地多边形
+    private func drawTerritories(on mapView: MKMapView) {
+        // 移除旧的领地多边形（保留路径轨迹）
+        let territoryOverlays = mapView.overlays.filter { overlay in
+            if let polygon = overlay as? MKPolygon {
+                return polygon.title == "mine" || polygon.title == "others"
+            }
+            return false
+        }
+        mapView.removeOverlays(territoryOverlays)
+
+        // 绘制每个领地
+        for territory in territories {
+            let coords = territory.toCoordinates()
+
+            // ⚠️ 中国大陆需要坐标转换（WGS-84 → GCJ-02）
+            let gcj02Coords = CoordinateConverter.wgs84ToGcj02(coords)
+
+            guard gcj02Coords.count >= 3 else { continue }
+
+            let polygon = MKPolygon(coordinates: gcj02Coords, count: gcj02Coords.count)
+
+            // ⚠️ 关键：比较 userId 时必须统一大小写！
+            // 数据库存的是小写 UUID，但 iOS 的 uuidString 返回大写
+            // 如果不转换，会导致自己的领地显示为橙色
+            let isMine = territory.userId.lowercased() == currentUserId?.lowercased()
+            polygon.title = isMine ? "mine" : "others"
+
+            mapView.addOverlay(polygon, level: .aboveRoads)
+        }
+
+        if !territories.isEmpty {
+            print("🏰 已绘制 \(territories.count) 个领地")
         }
     }
 
@@ -228,11 +275,22 @@ struct MapViewRepresentable: UIViewRepresentable {
             if let polygon = overlay as? MKPolygon {
                 let renderer = MKPolygonRenderer(polygon: polygon)
 
-                // 填充色：半透明绿色
-                renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
-                // 边框色：绿色
-                renderer.strokeColor = UIColor.systemGreen
-                renderer.lineWidth = 2
+                // 根据多边形类型设置颜色
+                if polygon.title == "mine" {
+                    // 我的领地：绿色
+                    renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
+                    renderer.strokeColor = UIColor.systemGreen
+                } else if polygon.title == "others" {
+                    // 他人领地：橙色
+                    renderer.fillColor = UIColor.systemOrange.withAlphaComponent(0.25)
+                    renderer.strokeColor = UIColor.systemOrange
+                } else {
+                    // 默认（当前圈地轨迹）：绿色
+                    renderer.fillColor = UIColor.systemGreen.withAlphaComponent(0.25)
+                    renderer.strokeColor = UIColor.systemGreen
+                }
+
+                renderer.lineWidth = 2.0
 
                 return renderer
             }
