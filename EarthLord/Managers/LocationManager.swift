@@ -499,8 +499,10 @@ class LocationManager: NSObject, ObservableObject {
                                      longitude: (p3.longitude + p4.longitude) / 2)
                 let midDistance = mid1.distance(from: mid2)
 
-                // 如果两线段中点距离太近（<20米），可能是GPS误差，跳过
-                if midDistance < 20 {
+                // ⚠️ 如果两线段中点距离太近（<5米），可能是GPS误差，跳过
+                // 注意：阈值不能太大，否则小范围圈地时会跳过所有检测
+                // 5米可以过滤GPS正常误差（2-3米），但不会影响真实的交叉检测
+                if midDistance < 5 {
                     continue
                 }
 
