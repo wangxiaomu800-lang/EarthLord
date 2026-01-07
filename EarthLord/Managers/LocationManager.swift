@@ -208,6 +208,14 @@ class LocationManager: NSObject, ObservableObject {
                 }
             }
         }
+
+        // ⚠️ 重要：清空路径和重置所有验证状态，防止重复上传
+        pathCoordinates.removeAll()
+        pathUpdateVersion += 1
+        isPathClosed = false
+        territoryValidationPassed = false
+        territoryValidationError = nil
+        calculatedArea = 0
     }
 
     /// 清除路径
