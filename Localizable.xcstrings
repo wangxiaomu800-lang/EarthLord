@@ -209,6 +209,9 @@
     "圈地功能测试" : {
 
     },
+    "圈地成功！领地面积: %@m²" : {
+
+    },
     "圈地测试" : {
 
     },
@@ -367,17 +370,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Allow Location"
-          }
-        }
-      }
-    },
-    "探索和圈占领地" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Explore and Claim Territory"
           }
         }
       }

@@ -30,6 +30,9 @@ struct MapTabView: View {
     /// 是否显示权限设置提示
     @State private var showSettingsAlert = false
 
+    /// 是否显示验证结果横幅
+    @State private var showValidationBanner = false
+
     // MARK: - 视图主体
 
     var body: some View {
@@ -89,9 +92,37 @@ struct MapTabView: View {
                     Spacer()
                 }
             }
+
+            // 验证结果横幅
+            if showValidationBanner {
+                VStack {
+                    validationResultBanner
+                    Spacer()
+                }
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
         .onAppear {
             handleOnAppear()
+        }
+        .onReceive(locationManager.$shouldShowValidationBanner) { shouldShow in
+            // 监听验证横幅触发标志
+            if shouldShow {
+                // 延迟一点点，等待验证结果更新
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    withAnimation {
+                        showValidationBanner = true
+                    }
+                    // 3 秒后自动隐藏
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                        withAnimation {
+                            showValidationBanner = false
+                        }
+                        // 重置标志
+                        locationManager.shouldShowValidationBanner = false
+                    }
+                }
+            }
         }
         .onChange(of: locationManager.speedWarning) { _, newWarning in
             // 警告出现后 3 秒自动消失
@@ -284,6 +315,31 @@ struct MapTabView: View {
         .padding(.horizontal, 20)
         .transition(.move(edge: .top).combined(with: .opacity))
         .animation(.spring(), value: locationManager.speedWarning)
+    }
+
+    /// 验证结果横幅（根据验证结果显示成功或失败）
+    private var validationResultBanner: some View {
+        HStack(spacing: 8) {
+            Image(systemName: locationManager.territoryValidationPassed
+                    ? "checkmark.circle.fill"
+                    : "xmark.circle.fill")
+                .font(.body)
+            if locationManager.territoryValidationPassed {
+                Text("圈地成功！领地面积: \(String(format: "%.0f", locationManager.calculatedArea))m²")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            } else {
+                Text(locationManager.territoryValidationError ?? "验证失败")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+        }
+        .foregroundColor(.white)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .background(locationManager.territoryValidationPassed ? Color.green : Color.red)
+        .padding(.top, 50)
     }
 
     // MARK: - 方法
