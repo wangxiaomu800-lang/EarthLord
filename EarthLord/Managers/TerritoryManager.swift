@@ -208,4 +208,40 @@ class TerritoryManager: ObservableObject {
             throw error
         }
     }
+
+    /// 加载我的领地
+    /// - Returns: 我的领地数组
+    /// - Throws: 查询失败时抛出错误
+    func loadMyTerritories() async throws -> [Territory] {
+        guard let userId = try? await supabase.auth.session.user.id else {
+            throw NSError(domain: "TerritoryManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "未登录"])
+        }
+
+        let response: [Territory] = try await supabase
+            .from("territories")
+            .select()
+            .eq("user_id", value: userId.uuidString)
+            .eq("is_active", value: true)
+            .order("created_at", ascending: false)
+            .execute()
+            .value
+
+        return response
+    }
+
+    /// 删除领地
+    /// - Parameter territoryId: 领地 ID
+    /// - Returns: 是否删除成功
+    func deleteTerritory(territoryId: String) async -> Bool {
+        do {
+            try await supabase
+                .from("territories")
+                .delete()
+                .eq("id", value: territoryId)
+                .execute()
+            return true
+        } catch {
+            return false
+        }
+    }
 }
