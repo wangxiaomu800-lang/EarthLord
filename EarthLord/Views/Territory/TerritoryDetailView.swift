@@ -106,37 +106,13 @@ struct TerritoryDetailView: View {
                 Divider()
             }
 
-            // 开始时间
-            if let startedAt = territory.startedAt {
-                InfoRow(
-                    icon: "clock.fill",
-                    title: "开始时间",
-                    value: formatDate(startedAt),
-                    color: .green
-                )
-
-                Divider()
-            }
-
-            // 完成时间
-            if let completedAt = territory.completedAt {
-                InfoRow(
-                    icon: "checkmark.circle.fill",
-                    title: "完成时间",
-                    value: formatDate(completedAt),
-                    color: .purple
-                )
-
-                Divider()
-            }
-
             // 创建时间
             if let createdAt = territory.createdAt {
                 InfoRow(
                     icon: "calendar",
                     title: "创建时间",
                     value: formatDate(createdAt),
-                    color: .gray
+                    color: .green
                 )
             }
         }
