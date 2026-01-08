@@ -178,10 +178,33 @@ struct TerritoryDetailView: View {
     // MARK: - 方法
 
     /// 格式化日期
-    private func formatDate(_ isoString: String) -> String {
+    private func formatDate(_ dateString: String) -> String {
+        // PostgreSQL 返回格式：2026-01-08 05:25:59.679755+00
+        // 需要转换为标准 ISO8601 格式
+        let standardISOString = dateString
+            .replacingOccurrences(of: " ", with: "T")  // 空格替换为 T
+            .replacingOccurrences(of: "+00", with: "+00:00")  // 时区格式修正
+
         let formatter = ISO8601DateFormatter()
-        guard let date = formatter.date(from: isoString) else {
-            return "未知时间"
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        guard let date = formatter.date(from: standardISOString) else {
+            // 如果 ISO8601 失败，尝试直接解析
+            let fallbackFormatter = DateFormatter()
+            fallbackFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSSSSSZ"
+            fallbackFormatter.locale = Locale(identifier: "en_US_POSIX")
+            fallbackFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+
+            guard let fallbackDate = fallbackFormatter.date(from: dateString) else {
+                return "未知时间"
+            }
+
+            let displayFormatter = DateFormatter()
+            displayFormatter.dateStyle = .medium
+            displayFormatter.timeStyle = .short
+            displayFormatter.locale = Locale.current
+
+            return displayFormatter.string(from: fallbackDate)
         }
 
         let displayFormatter = DateFormatter()
