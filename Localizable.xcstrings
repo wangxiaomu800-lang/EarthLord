@@ -633,17 +633,6 @@
         }
       }
     },
-    "管理你的领地" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Manage Your Territory"
-          }
-        }
-      }
-    },
     "设置" : {
       "localizations" : {
         "en" : {
