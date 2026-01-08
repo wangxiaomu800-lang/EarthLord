@@ -26,9 +26,6 @@ struct TerritoryDetailView: View {
     /// 是否正在删除
     @State private var isDeleting = false
 
-    /// 是否显示"敬请期待"提示
-    @State private var showingComingSoon = false
-
     /// 关闭视图
     @Environment(\.dismiss) var dismiss
 
@@ -47,8 +44,8 @@ struct TerritoryDetailView: View {
                     // 详细信息
                     detailInfoSection
 
-                    // 占位功能按钮
-                    placeholderFeaturesSection
+                    // 占位提示
+                    placeholderSection
 
                     // 删除按钮
                     deleteButton
@@ -73,11 +70,6 @@ struct TerritoryDetailView: View {
                 }
             } message: {
                 Text("确定要删除这个领地吗？此操作无法撤销。")
-            }
-            .alert("敬请期待", isPresented: $showingComingSoon) {
-                Button("确定", role: .cancel) { }
-            } message: {
-                Text("该功能正在开发中，敬请期待！")
             }
         }
     }
@@ -154,36 +146,31 @@ struct TerritoryDetailView: View {
         .padding(.horizontal)
     }
 
-    /// 占位功能区域
-    private var placeholderFeaturesSection: some View {
-        VStack(spacing: 12) {
-            // 重命名按钮
-            FeatureButton(
-                icon: "pencil",
-                title: "重命名领地",
-                color: .blue
-            ) {
-                showingComingSoon = true
-            }
+    /// 占位提示区域
+    private var placeholderSection: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "ellipsis.circle")
+                .font(.largeTitle)
+                .foregroundColor(.secondary)
 
-            // 建筑系统按钮
-            FeatureButton(
-                icon: "building.2",
-                title: "建筑系统",
-                color: .purple
-            ) {
-                showingComingSoon = true
-            }
+            Text("更多功能")
+                .font(.headline)
+                .foregroundColor(.primary)
 
-            // 领地交易按钮
-            FeatureButton(
-                icon: "arrow.left.arrow.right",
-                title: "领地交易",
-                color: .orange
-            ) {
-                showingComingSoon = true
-            }
+            Text("重命名、建筑系统、领地交易等功能")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+
+            Text("敬请期待")
+                .font(.caption)
+                .foregroundColor(.orange)
+                .padding(.top, 4)
         }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 24)
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
         .padding(.horizontal)
     }
 
@@ -242,40 +229,6 @@ struct TerritoryDetailView: View {
             dismiss()
         } else {
             print("❌ 删除领地失败")
-        }
-    }
-}
-
-// MARK: - 功能按钮组件
-
-/// 功能按钮视图
-private struct FeatureButton: View {
-    let icon: String
-    let title: String
-    let color: Color
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.title3)
-                    .foregroundColor(color)
-                    .frame(width: 30)
-
-                Text(title)
-                    .font(.body)
-                    .foregroundColor(.primary)
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            .padding()
-            .background(Color(.systemGray6))
-            .cornerRadius(12)
         }
     }
 }
