@@ -26,6 +26,12 @@ struct POIListView: View {
     /// 是否显示详情页
     @State private var showingDetail = false
 
+    /// 搜索按钮缩放效果
+    @State private var searchButtonScale: CGFloat = 1.0
+
+    /// 列表项是否已加载
+    @State private var itemsLoaded = false
+
     /// 模拟的 GPS 坐标
     private let mockLatitude: Double = 22.54
     private let mockLongitude: Double = 114.06
@@ -48,41 +54,36 @@ struct POIListView: View {
     // MARK: - 视图
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // 背景色
-                ApocalypseTheme.background
-                    .ignoresSafeArea()
+        ZStack {
+            // 背景色
+            ApocalypseTheme.background
+                .ignoresSafeArea()
 
-                VStack(spacing: 0) {
-                    // 状态栏
-                    statusBar
-                        .padding(.horizontal)
-                        .padding(.top, 8)
+            VStack(spacing: 0) {
+                // 状态栏
+                statusBar
+                    .padding(.horizontal)
+                    .padding(.top, 8)
 
-                    // 搜索按钮
-                    searchButton
-                        .padding(.horizontal)
-                        .padding(.top, 16)
+                // 搜索按钮
+                searchButton
+                    .padding(.horizontal)
+                    .padding(.top, 16)
 
-                    // 筛选工具栏
-                    filterToolbar
-                        .padding(.top, 16)
+                // 筛选工具栏
+                filterToolbar
+                    .padding(.top, 16)
 
-                    // POI 列表
-                    poiListView
-                        .padding(.top, 12)
-                }
+                // POI 列表
+                poiListView
+                    .padding(.top, 12)
             }
-            .navigationTitle("附近地点")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(ApocalypseTheme.cardBackground, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .sheet(isPresented: $showingDetail) {
-                if let poi = selectedPOI {
-                    POIDetailView(poi: poi)
-                }
+        }
+        .navigationTitle("附近地点")
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showingDetail) {
+            if let poi = selectedPOI {
+                POIDetailView(poi: poi)
             }
         }
     }
@@ -124,7 +125,19 @@ struct POIListView: View {
 
     /// 搜索按钮
     private var searchButton: some View {
-        Button(action: performSearch) {
+        Button(action: {
+            // 按下动画
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                searchButtonScale = 0.95
+            }
+            // 弹回动画
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                    searchButtonScale = 1.0
+                }
+            }
+            performSearch()
+        }) {
             HStack(spacing: 12) {
                 if isSearching {
                     ProgressView()
@@ -153,6 +166,7 @@ struct POIListView: View {
             )
             .cornerRadius(12)
         }
+        .scaleEffect(searchButtonScale)
         .disabled(isSearching)
     }
 
@@ -194,8 +208,14 @@ struct POIListView: View {
                     // 空状态
                     emptyStateView
                 } else {
-                    ForEach(filteredPOIs) { poi in
+                    ForEach(Array(filteredPOIs.enumerated()), id: \.element.id) { index, poi in
                         POICard(poi: poi)
+                            .opacity(itemsLoaded ? 1 : 0)
+                            .offset(y: itemsLoaded ? 0 : 20)
+                            .animation(
+                                .easeOut(duration: 0.4).delay(Double(index) * 0.1),
+                                value: itemsLoaded
+                            )
                             .onTapGesture {
                                 handlePOITap(poi)
                             }
@@ -205,25 +225,43 @@ struct POIListView: View {
             .padding(.horizontal)
             .padding(.bottom, 20)
         }
+        .onAppear {
+            // 触发加载动画
+            withAnimation {
+                itemsLoaded = true
+            }
+        }
     }
 
     /// 空状态视图
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "mappin.slash")
-                .font(.system(size: 50))
+        VStack(spacing: 20) {
+            // 图标
+            Image(systemName: selectedCategory == nil ? "map" : "mappin.slash")
+                .font(.system(size: 60))
                 .foregroundColor(ApocalypseTheme.textMuted)
 
-            Text("没有找到地点")
+            // 标题
+            Text(selectedCategory == nil ? "附近暂无兴趣点" : "没有找到该类型的地点")
                 .font(.headline)
                 .foregroundColor(ApocalypseTheme.textSecondary)
 
-            Text("尝试搜索或切换筛选条件")
-                .font(.subheadline)
-                .foregroundColor(ApocalypseTheme.textMuted)
+            // 提示文字
+            if selectedCategory == nil {
+                Text("点击搜索按钮发现周围的废墟")
+                    .font(.subheadline)
+                    .foregroundColor(ApocalypseTheme.textMuted)
+                    .multilineTextAlignment(.center)
+            } else {
+                Text("尝试切换其他分类或清除筛选")
+                    .font(.subheadline)
+                    .foregroundColor(ApocalypseTheme.textMuted)
+                    .multilineTextAlignment(.center)
+            }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 60)
+        .padding(.horizontal, 40)
+        .padding(.vertical, 80)
     }
 
     // MARK: - 方法

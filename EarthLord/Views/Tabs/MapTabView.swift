@@ -68,6 +68,14 @@ struct MapTabView: View {
     /// 圈地开始时间
     @State private var trackingStartTime: Date?
 
+    // MARK: - 探索功能状态
+
+    /// 是否正在探索
+    @State private var isExploring = false
+
+    /// 是否显示探索结果
+    @State private var showExplorationResult = false
+
     // MARK: - 视图主体
 
     var body: some View {
@@ -95,7 +103,20 @@ struct MapTabView: View {
                 permissionPromptView
             }
 
-            // 右下角：按钮组
+            // 左上角：GPS坐标显示
+            VStack {
+                HStack {
+                    if locationManager.isAuthorized {
+                        coordinatesOverlay
+                            .padding(.leading, 16)
+                            .padding(.top, 12) // 紧贴状态栏下方
+                    }
+                    Spacer()
+                }
+                Spacer()
+            }
+
+            // 右下角：确认登记按钮（单独一行）
             VStack {
                 Spacer()
 
@@ -103,21 +124,33 @@ struct MapTabView: View {
                     Spacer()
 
                     if locationManager.isAuthorized {
-                        VStack(spacing: 16) {
-                            // 确认登记按钮（只在验证通过且已闭环时显示）
-                            if locationManager.territoryValidationPassed && locationManager.isPathClosed {
-                                confirmTerritoryButton
-                            }
-
-                            // 圈地按钮
-                            trackingButton
-
-                            // 定位按钮
-                            locateButton
+                        // 确认登记按钮（只在验证通过且已闭环时显示）
+                        if locationManager.territoryValidationPassed && locationManager.isPathClosed {
+                            confirmTerritoryButton
+                                .padding(.trailing, 20)
+                                .padding(.bottom, 160) // 给下方按钮组留空间
                         }
-                        .padding(.trailing, 20)
-                        .padding(.bottom, 100) // 避免遮挡标签栏
                     }
+                }
+            }
+
+            // 底部：三个按钮横向排列
+            VStack {
+                Spacer()
+
+                if locationManager.isAuthorized {
+                    HStack(spacing: 16) {
+                        // 圈地按钮
+                        trackingButton
+
+                        // 定位按钮
+                        locateButton
+
+                        // 探索按钮
+                        exploreButton
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 110) // 距离 TabBar 的间距
                 }
             }
 
@@ -200,9 +233,45 @@ struct MapTabView: View {
         } message: {
             Text("请在设置中开启定位权限，以便在地图上显示您的位置")
         }
+        .sheet(isPresented: $showExplorationResult, onDismiss: {
+            // sheet 关闭后确保探索状态已重置
+            isExploring = false
+        }) {
+            ExplorationResultView(result: MockExplorationData.explorationResult)
+        }
     }
 
     // MARK: - 子视图
+
+    /// GPS坐标显示覆盖层
+    private var coordinatesOverlay: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "location.fill")
+                .font(.system(size: 14))
+                .foregroundColor(ApocalypseTheme.primary)
+
+            if let location = userLocation ?? locationManager.userLocation {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("当前坐标")
+                        .font(.system(size: 11))
+                        .foregroundColor(ApocalypseTheme.textSecondary)
+
+                    Text(String(format: "%.4f, %.4f", location.latitude, location.longitude))
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(ApocalypseTheme.textPrimary)
+                }
+            } else {
+                Text("定位中...")
+                    .font(.system(size: 13))
+                    .foregroundColor(ApocalypseTheme.textSecondary)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(ApocalypseTheme.cardBackground.opacity(0.95))
+        .cornerRadius(10)
+        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+    }
 
     /// 权限请求提示视图
     private var permissionPromptView: some View {
@@ -349,15 +418,15 @@ struct MapTabView: View {
                 }
             }
             .foregroundColor(.white)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
             .background(
                 locationManager.isTracking
                     ? Color.red
-                    : ApocalypseTheme.primary
+                    : Color(red: 1.0, green: 0.42, blue: 0.21) // 橙色 #FF6B35
             )
-            .cornerRadius(25)
-            .shadow(color: .black.opacity(0.3), radius: 5)
+            .cornerRadius(28)
+            .shadow(color: .black.opacity(0.25), radius: 8, x: 0, y: 4)
         }
     }
 
@@ -367,13 +436,47 @@ struct MapTabView: View {
             recenterMap()
         }) {
             Image(systemName: hasLocatedUser ? "location.fill" : "location")
-                .font(.system(size: 20))
+                .font(.system(size: 22, weight: .semibold))
                 .foregroundColor(.white)
-                .frame(width: 50, height: 50)
-                .background(ApocalypseTheme.primary)
-                .cornerRadius(25)
-                .shadow(color: .black.opacity(0.3), radius: 5)
+                .frame(width: 56, height: 56)
+                .background(Color(red: 1.0, green: 0.42, blue: 0.21)) // 橙色 #FF6B35
+                .clipShape(Circle())
+                .shadow(color: .black.opacity(0.25), radius: 8, x: 0, y: 4)
         }
+    }
+
+    /// 探索按钮
+    private var exploreButton: some View {
+        Button(action: {
+            performExploration()
+        }) {
+            HStack(spacing: 8) {
+                // 图标
+                if isExploring {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(0.8)
+                } else {
+                    Image(systemName: "binoculars.fill")
+                        .font(.system(size: 16))
+                }
+
+                // 文本
+                Text(isExploring ? "探索中..." : "探索")
+                    .font(.system(size: 14, weight: .semibold))
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 14)
+            .background(
+                isExploring
+                    ? ApocalypseTheme.textMuted
+                    : Color(red: 1.0, green: 0.42, blue: 0.21) // 橙色 #FF6B35
+            )
+            .cornerRadius(28)
+            .shadow(color: .black.opacity(0.25), radius: 8, x: 0, y: 4)
+        }
+        .disabled(isExploring)
     }
 
     /// 速度警告横幅
@@ -530,6 +633,21 @@ struct MapTabView: View {
         // 延迟一帧后恢复状态
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             hasLocatedUser = true
+        }
+    }
+
+    /// 执行探索
+    private func performExploration() {
+        // 标记为探索中
+        isExploring = true
+        print("🔍 开始探索附近区域...")
+
+        // 模拟探索过程（1.5秒）
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            // 探索完成
+            isExploring = false
+            showExplorationResult = true
+            print("✅ 探索完成，显示结果")
         }
     }
 

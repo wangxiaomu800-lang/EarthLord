@@ -20,6 +20,12 @@ struct BackpackView: View {
     /// 背包物品列表
     @State private var backpackItems: [BackpackItem] = MockExplorationData.backpackItems
 
+    /// 动画容量值
+    @State private var animatedCapacity: Double = 0.0
+
+    /// 物品是否已加载
+    @State private var itemsLoaded = false
+
     // MARK: - 常量
 
     /// 背包最大容量
@@ -83,38 +89,33 @@ struct BackpackView: View {
     // MARK: - 视图
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // 背景色
-                ApocalypseTheme.background
-                    .ignoresSafeArea()
+        ZStack {
+            // 背景色
+            ApocalypseTheme.background
+                .ignoresSafeArea()
 
-                VStack(spacing: 0) {
-                    // 容量状态卡
-                    capacityCard
-                        .padding(.horizontal)
-                        .padding(.top, 8)
+            VStack(spacing: 0) {
+                // 容量状态卡
+                capacityCard
+                    .padding(.horizontal)
+                    .padding(.top, 8)
 
-                    // 搜索框
-                    searchBar
-                        .padding(.horizontal)
-                        .padding(.top, 16)
+                // 搜索框
+                searchBar
+                    .padding(.horizontal)
+                    .padding(.top, 16)
 
-                    // 分类筛选
-                    categoryFilter
-                        .padding(.top, 12)
+                // 分类筛选
+                categoryFilter
+                    .padding(.top, 12)
 
-                    // 物品列表
-                    itemListView
-                        .padding(.top, 12)
-                }
+                // 物品列表
+                itemListView
+                    .padding(.top, 12)
             }
-            .navigationTitle("背包")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(ApocalypseTheme.cardBackground, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
         }
+        .navigationTitle("背包")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     // MARK: - 子视图
@@ -133,10 +134,11 @@ struct BackpackView: View {
 
                 Spacer()
 
-                // 容量数值
-                Text(String(format: "%.1f / %.0f kg", currentCapacity, maxCapacity))
+                // 容量数值（带动画）
+                Text(String(format: "%.1f / %.0f kg", animatedCapacity, maxCapacity))
                     .font(.system(.subheadline, design: .monospaced))
                     .foregroundColor(progressColor)
+                    .animation(.easeInOut(duration: 0.5), value: animatedCapacity)
             }
 
             // 进度条
@@ -147,13 +149,26 @@ struct BackpackView: View {
                         .fill(ApocalypseTheme.textMuted.opacity(0.3))
                         .frame(height: 12)
 
-                    // 进度
+                    // 进度（带动画）
                     RoundedRectangle(cornerRadius: 6)
                         .fill(progressColor)
-                        .frame(width: geometry.size.width * min(usagePercentage, 1.0), height: 12)
+                        .frame(width: geometry.size.width * min(animatedCapacity / maxCapacity, 1.0), height: 12)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: animatedCapacity)
                 }
             }
             .frame(height: 12)
+            .onAppear {
+                // 页面出现时启动动画
+                withAnimation(.spring(response: 0.8, dampingFraction: 0.7)) {
+                    animatedCapacity = currentCapacity
+                }
+            }
+            .onChange(of: currentCapacity) { oldValue, newValue in
+                // 容量变化时更新动画
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                    animatedCapacity = newValue
+                }
+            }
 
             // 警告文字
             if showWarning {
@@ -233,9 +248,19 @@ struct BackpackView: View {
                 if filteredItems.isEmpty {
                     emptyStateView
                 } else {
-                    ForEach(filteredItems) { item in
+                    ForEach(Array(filteredItems.enumerated()), id: \.element.id) { index, item in
                         if let definition = MockExplorationData.findItemDefinition(by: item.itemId) {
                             ItemCard(item: item, definition: definition)
+                                .opacity(itemsLoaded ? 1 : 0)
+                                .offset(y: itemsLoaded ? 0 : 10)
+                                .animation(
+                                    .easeOut(duration: 0.3).delay(Double(index) * 0.05),
+                                    value: itemsLoaded
+                                )
+                                .transition(.asymmetric(
+                                    insertion: .opacity.combined(with: .move(edge: .bottom)),
+                                    removal: .opacity
+                                ))
                         }
                     }
                 }
@@ -243,31 +268,50 @@ struct BackpackView: View {
             .padding(.horizontal)
             .padding(.bottom, 20)
         }
+        .onAppear {
+            // 触发加载动画
+            itemsLoaded = true
+        }
+        .onChange(of: selectedCategory) { oldValue, newValue in
+            // 切换分类时重置并重新触发动画
+            itemsLoaded = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation {
+                    itemsLoaded = true
+                }
+            }
+        }
     }
 
     /// 空状态视图
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "tray")
-                .font(.system(size: 50))
+        VStack(spacing: 20) {
+            // 图标
+            Image(systemName: !searchText.isEmpty || selectedCategory != nil ? "magnifyingglass" : "bag")
+                .font(.system(size: 60))
                 .foregroundColor(ApocalypseTheme.textMuted)
 
-            Text("没有找到物品")
+            // 标题
+            Text(!searchText.isEmpty || selectedCategory != nil ? "没有找到相关物品" : "背包空空如也")
                 .font(.headline)
                 .foregroundColor(ApocalypseTheme.textSecondary)
 
+            // 提示文字
             if !searchText.isEmpty || selectedCategory != nil {
                 Text("尝试清除搜索或切换分类")
                     .font(.subheadline)
                     .foregroundColor(ApocalypseTheme.textMuted)
+                    .multilineTextAlignment(.center)
             } else {
-                Text("去探索世界收集物资吧")
+                Text("去探索收集物资吧")
                     .font(.subheadline)
                     .foregroundColor(ApocalypseTheme.textMuted)
+                    .multilineTextAlignment(.center)
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 60)
+        .padding(.horizontal, 40)
+        .padding(.vertical, 80)
     }
 }
 

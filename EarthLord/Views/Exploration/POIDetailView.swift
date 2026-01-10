@@ -127,7 +127,7 @@ struct POIDetailView: View {
             }
             .toolbarBackground(.hidden, for: .navigationBar)
             .sheet(isPresented: $showSearchResult) {
-                SearchResultView(poi: poi)
+                ExplorationResultView(result: generateMockResult())
             }
         }
     }
@@ -413,6 +413,33 @@ struct POIDetailView: View {
         print("📦 标记为无物资: \(poi.name)")
         // TODO: 实现标记逻辑
     }
+
+    /// 生成模拟的探索结果
+    private func generateMockResult() -> ExplorationStats {
+        // 获取 POI 的物品作为探索结果
+        let items = poi.lootItems?.map { loot -> ObtainedItem in
+            // 随机获得数量
+            let randomQuantity = Int.random(in: 1...loot.quantity)
+            return ObtainedItem(
+                id: UUID().uuidString,
+                itemId: loot.itemId,
+                quantity: randomQuantity,
+                quality: ItemQuality.allCases.randomElement()
+            )
+        } ?? []
+
+        // 创建探索结果
+        return ExplorationStats(
+            walkingDistance: Double.random(in: 50...200),
+            totalDistance: Double.random(in: 1000...5000),
+            distanceRank: Int.random(in: 10...100),
+            exploredArea: Double.random(in: 100...500),
+            totalArea: Double.random(in: 2000...10000),
+            areaRank: Int.random(in: 10...100),
+            duration: TimeInterval(Int.random(in: 60...300)),
+            obtainedItems: items
+        )
+    }
 }
 
 // MARK: - 信息行组件
@@ -469,112 +496,6 @@ private struct SecondaryButton: View {
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(ApocalypseTheme.textMuted.opacity(0.3), lineWidth: 1)
             )
-        }
-    }
-}
-
-// MARK: - 搜寻结果视图
-
-/// 搜寻结果弹窗
-private struct SearchResultView: View {
-    let poi: POI
-
-    @Environment(\.dismiss) var dismiss
-
-    /// 模拟获得的物品
-    private var obtainedItems: [(name: String, quantity: Int)] {
-        guard let lootItems = poi.lootItems else { return [] }
-
-        return lootItems.compactMap { loot in
-            if let definition = MockExplorationData.findItemDefinition(by: loot.itemId) {
-                // 简单模拟：随机获得 1 到 loot.quantity 个
-                let obtained = Int.random(in: 1...loot.quantity)
-                return (definition.name, obtained)
-            }
-            return nil
-        }
-    }
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                ApocalypseTheme.background
-                    .ignoresSafeArea()
-
-                VStack(spacing: 24) {
-                    // 成功图标
-                    ZStack {
-                        Circle()
-                            .fill(ApocalypseTheme.success.opacity(0.2))
-                            .frame(width: 100, height: 100)
-
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(ApocalypseTheme.success)
-                    }
-                    .padding(.top, 40)
-
-                    // 标题
-                    Text("搜寻完成!")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(ApocalypseTheme.textPrimary)
-
-                    // 获得物品列表
-                    VStack(spacing: 12) {
-                        Text("获得物品")
-                            .font(.headline)
-                            .foregroundColor(ApocalypseTheme.textSecondary)
-
-                        if obtainedItems.isEmpty {
-                            Text("什么都没找到...")
-                                .foregroundColor(ApocalypseTheme.textMuted)
-                                .padding()
-                        } else {
-                            ForEach(obtainedItems, id: \.name) { item in
-                                HStack {
-                                    Image(systemName: "cube.box.fill")
-                                        .foregroundColor(ApocalypseTheme.warning)
-
-                                    Text(item.name)
-                                        .foregroundColor(ApocalypseTheme.textPrimary)
-
-                                    Spacer()
-
-                                    Text("x\(item.quantity)")
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(ApocalypseTheme.success)
-                                }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 10)
-                                .background(ApocalypseTheme.cardBackground)
-                                .cornerRadius(8)
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-
-                    Spacer()
-
-                    // 确认按钮
-                    Button(action: { dismiss() }) {
-                        Text("收下物资")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(ApocalypseTheme.success)
-                            .cornerRadius(12)
-                    }
-                    .padding(.horizontal)
-                    .padding(.bottom, 40)
-                }
-            }
-            .navigationTitle("搜寻结果")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(ApocalypseTheme.cardBackground, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
         }
     }
 }
