@@ -30,6 +30,18 @@ class ExplorationManager: NSObject, ObservableObject {
     /// 探索轨迹点
     @Published var explorationPath: [CLLocationCoordinate2D] = []
 
+    /// 当前速度（米/秒）
+    @Published var currentSpeed: Double = 0
+
+    /// 速度警告消息
+    @Published var speedWarning: String?
+
+    /// 是否探索失败
+    @Published var explorationFailed: Bool = false
+
+    /// 探索失败原因
+    @Published var failureReason: String?
+
     // MARK: - 私有属性
 
     /// 位置管理器
@@ -50,6 +62,12 @@ class ExplorationManager: NSObject, ObservableObject {
     /// 上次位置更新时间
     private var lastLocationUpdateTime: Date?
 
+    /// 速度警告定时器
+    private var speedWarningTimer: Timer?
+
+    /// 速度警告开始时间
+    private var speedWarningStartTime: Date?
+
     // MARK: - 常量
 
     /// GPS 精度阈值（米）- 精度差于此值的点将被忽略
@@ -60,6 +78,12 @@ class ExplorationManager: NSObject, ObservableObject {
 
     /// 最小时间间隔（秒）- 距离上次更新小于此时间的点将被忽略
     private let minimumTimeInterval: TimeInterval = 1.0
+
+    /// 速度限制（米/秒）- 30km/h = 8.33m/s
+    private let speedLimit: Double = 8.33
+
+    /// 速度警告时长（秒）- 超速10秒后停止探索
+    private let speedWarningDuration: TimeInterval = 10.0
 
     // MARK: - 初始化
 
@@ -77,26 +101,35 @@ class ExplorationManager: NSObject, ObservableObject {
 
     /// 开始探索
     func startExploration() {
-        print("🔍 开始探索")
+        print("🔍 ========== 开始探索 ==========")
 
         // 重置状态
         isExploring = true
         currentDistance = 0
         currentDuration = 0
+        currentSpeed = 0
         explorationPath = []
         lastValidLocation = nil
         startTime = Date()
         lastLocationUpdateTime = nil
+        speedWarning = nil
+        speedWarningTimer = nil
+        speedWarningStartTime = nil
+        explorationFailed = false
+        failureReason = nil
 
         // 记录开始位置
         if let location = LocationManager.shared.userLocation {
             startLocation = location
             explorationPath.append(location)
-            print("📍 探索起点: \(location.latitude), \(location.longitude)")
+            print("📍 探索起点: 纬度=\(location.latitude), 经度=\(location.longitude)")
+        } else {
+            print("⚠️ 警告: 未获取到起始位置")
         }
 
         // 开始GPS追踪
         locationManager.startUpdatingLocation()
+        print("🛰️ GPS定位已启动")
 
         // 启动计时器（每秒更新一次时长）
         durationTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
@@ -108,20 +141,26 @@ class ExplorationManager: NSObject, ObservableObject {
             }
         }
 
-        print("✅ 探索已开始")
+        print("✅ 探索已开始，等待GPS位置更新...")
     }
 
     /// 停止探索
     /// - Returns: 探索结果数据（距离、时长、起始位置等）
     func stopExploration() -> (distance: Double, duration: TimeInterval, startLocation: CLLocationCoordinate2D?, endLocation: CLLocationCoordinate2D?) {
-        print("🛑 停止探索")
+        print("🛑 ========== 停止探索 ==========")
 
         // 停止GPS追踪
         locationManager.stopUpdatingLocation()
+        print("🛰️ GPS定位已停止")
 
         // 停止计时器
         durationTimer?.invalidate()
         durationTimer = nil
+
+        // 停止速度警告定时器
+        speedWarningTimer?.invalidate()
+        speedWarningTimer = nil
+        speedWarningStartTime = nil
 
         // 计算最终时长
         if let startTime = startTime {
@@ -140,10 +179,12 @@ class ExplorationManager: NSObject, ObservableObject {
         // 重置状态
         isExploring = false
 
-        print("📊 探索统计:")
-        print("   - 距离: \(finalDistance) 米")
-        print("   - 时长: \(Int(finalDuration)) 秒")
-        print("   - 轨迹点: \(explorationPath.count) 个")
+        print("📊 ========== 探索统计 ==========")
+        print("   📏 总距离: \(String(format: "%.2f", finalDistance)) 米")
+        print("   ⏱️ 总时长: \(Int(finalDuration)) 秒 (\(Int(finalDuration/60))分\(Int(finalDuration)%60)秒)")
+        print("   📍 轨迹点数: \(explorationPath.count) 个")
+        print("   📈 平均速度: \(String(format: "%.2f", finalDistance/finalDuration)) 米/秒")
+        print("================================")
 
         return (finalDistance, finalDuration, finalStartLocation, finalEndLocation)
     }
@@ -154,41 +195,134 @@ class ExplorationManager: NSObject, ObservableObject {
     private func handleLocationUpdate(_ location: CLLocation) {
         guard isExploring else { return }
 
+        print("\n🛰️ ========== GPS位置更新 ==========")
+        print("   📍 坐标: (\(String(format: "%.6f", location.coordinate.latitude)), \(String(format: "%.6f", location.coordinate.longitude)))")
+        print("   🎯 精度: \(String(format: "%.2f", location.horizontalAccuracy))m")
+        print("   🚀 速度: \(String(format: "%.2f", location.speed))m/s (\(String(format: "%.2f", location.speed * 3.6))km/h)")
+        print("   ⏰ 时间: \(location.timestamp)")
+
         // 1. 检查精度
         if location.horizontalAccuracy > accuracyThreshold {
-            print("⚠️ GPS精度太差: \(location.horizontalAccuracy)m，忽略此点")
+            print("❌ 精度检查失败: \(String(format: "%.2f", location.horizontalAccuracy))m > \(accuracyThreshold)m，忽略此点")
             return
         }
+        print("✅ 精度检查通过")
 
         // 2. 检查时间间隔
         if let lastTime = lastLocationUpdateTime {
             let timeInterval = location.timestamp.timeIntervalSince(lastTime)
             if timeInterval < minimumTimeInterval {
-                print("⚠️ 时间间隔太短: \(timeInterval)s，忽略此点")
+                print("❌ 时间间隔检查失败: \(String(format: "%.2f", timeInterval))s < \(minimumTimeInterval)s，忽略此点")
                 return
+            }
+            print("✅ 时间间隔检查通过: \(String(format: "%.2f", timeInterval))s")
+        }
+
+        // 3. 计算速度并检查是否超速
+        var calculatedSpeed: Double = 0
+        if let lastLocation = lastValidLocation, let lastTime = lastLocationUpdateTime {
+            let distance = location.distance(from: lastLocation)
+            let timeInterval = location.timestamp.timeIntervalSince(lastTime)
+
+            if timeInterval > 0 {
+                calculatedSpeed = distance / timeInterval
+                currentSpeed = calculatedSpeed
+
+                let speedKmh = calculatedSpeed * 3.6
+                print("📊 计算速度: \(String(format: "%.2f", calculatedSpeed))m/s = \(String(format: "%.2f", speedKmh))km/h")
+
+                // 检查是否超速（30km/h = 8.33m/s）
+                if calculatedSpeed > speedLimit {
+                    print("⚠️ ========== 速度超限 ==========")
+                    print("   当前速度: \(String(format: "%.2f", speedKmh))km/h")
+                    print("   限制速度: 30km/h")
+                    handleSpeedWarning(speed: calculatedSpeed)
+                } else {
+                    // 速度正常，清除警告
+                    if speedWarning != nil {
+                        print("✅ 速度恢复正常，清除警告")
+                        clearSpeedWarning()
+                    }
+                }
             }
         }
 
-        // 3. 检查距离跳变
+        // 4. 检查距离跳变
         if let lastLocation = lastValidLocation {
             let distance = location.distance(from: lastLocation)
 
             if distance > distanceJumpThreshold {
-                print("⚠️ 距离跳变过大: \(distance)m，忽略此点")
+                print("❌ 距离跳变检查失败: \(String(format: "%.2f", distance))m > \(distanceJumpThreshold)m，忽略此点")
                 return
             }
+            print("✅ 距离跳变检查通过: \(String(format: "%.2f", distance))m")
 
             // 累加距离
             currentDistance += distance
-            print("📏 新增距离: \(String(format: "%.1f", distance))m, 总距离: \(String(format: "%.1f", currentDistance))m")
+            print("📏 ========== 距离统计 ==========")
+            print("   ➕ 新增: \(String(format: "%.2f", distance))m")
+            print("   📍 累计: \(String(format: "%.2f", currentDistance))m")
         }
 
-        // 4. 保存为有效点
+        // 5. 保存为有效点
         lastValidLocation = location
         lastLocationUpdateTime = location.timestamp
         explorationPath.append(location.coordinate)
 
-        print("✅ 有效GPS点: \(location.coordinate.latitude), \(location.coordinate.longitude), 精度: \(location.horizontalAccuracy)m")
+        print("✅ GPS点已记录，当前轨迹点数: \(explorationPath.count)")
+        print("====================================\n")
+    }
+
+    /// 处理速度警告
+    private func handleSpeedWarning(speed: Double) {
+        let speedKmh = speed * 3.6
+
+        if speedWarningStartTime == nil {
+            // 第一次超速，开始警告
+            speedWarningStartTime = Date()
+            speedWarning = String(format: "速度过快 %.0fkm/h！请降低速度", speedKmh)
+            print("⚠️ 开始速度警告，10秒后若未降速将停止探索")
+
+            // 启动10秒倒计时
+            speedWarningTimer?.invalidate()
+            speedWarningTimer = Timer.scheduledTimer(withTimeInterval: speedWarningDuration, repeats: false) { [weak self] _ in
+                guard let self = self else { return }
+                Task { @MainActor in
+                    // 10秒后仍在超速，停止探索
+                    self.failExploration(reason: "速度持续超过限制，探索自动停止")
+                }
+            }
+        } else {
+            // 持续超速，更新警告消息
+            if let startTime = speedWarningStartTime {
+                let elapsed = Date().timeIntervalSince(startTime)
+                let remaining = max(0, speedWarningDuration - elapsed)
+                speedWarning = String(format: "速度过快 %.0fkm/h！%.0f秒后自动停止", speedKmh, remaining)
+                print("⚠️ 持续超速，剩余时间: \(String(format: "%.0f", remaining))秒")
+            }
+        }
+    }
+
+    /// 清除速度警告
+    private func clearSpeedWarning() {
+        speedWarning = nil
+        speedWarningTimer?.invalidate()
+        speedWarningTimer = nil
+        speedWarningStartTime = nil
+        print("✅ 速度警告已清除")
+    }
+
+    /// 探索失败
+    private func failExploration(reason: String) {
+        print("❌ ========== 探索失败 ==========")
+        print("   原因: \(reason)")
+        print("================================")
+
+        explorationFailed = true
+        failureReason = reason
+
+        // 停止探索
+        _ = stopExploration()
     }
 }
 

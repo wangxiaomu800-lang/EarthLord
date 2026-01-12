@@ -42,9 +42,6 @@ struct ExplorationResultView: View {
     /// 动画数值：行走距离
     @State private var animatedWalkingDistance: Double = 0
 
-    /// 动画数值：探索面积
-    @State private var animatedExploredArea: Double = 0
-
     /// 动画数值：时长
     @State private var animatedDuration: TimeInterval = 0
 
@@ -93,14 +90,11 @@ struct ExplorationResultView: View {
                         animatedWalkingDistance = result.walkingDistance
                     }
                     withAnimation(.spring(response: 0.8, dampingFraction: 0.7).delay(0.6)) {
-                        animatedExploredArea = result.exploredArea
-                    }
-                    withAnimation(.spring(response: 0.8, dampingFraction: 0.7).delay(0.7)) {
                         animatedDuration = result.duration
                     }
 
                     // 物品列表动画
-                    withAnimation(.easeOut(duration: 0.5).delay(0.8)) {
+                    withAnimation(.easeOut(duration: 0.5).delay(0.7)) {
                         showItems = true
                     }
                 }
@@ -289,18 +283,6 @@ struct ExplorationResultView: View {
                 currentValue: MockExplorationData.formatDistance(animatedWalkingDistance),
                 totalValue: "累计 " + MockExplorationData.formatDistance(result.totalDistance),
                 rank: result.distanceRank
-            )
-
-            Divider()
-                .background(ApocalypseTheme.textMuted.opacity(0.3))
-
-            // 探索面积（使用动画值）
-            StatRow(
-                icon: "square.dashed",
-                title: "探索面积",
-                currentValue: MockExplorationData.formatArea(animatedExploredArea),
-                totalValue: "累计 " + MockExplorationData.formatArea(result.totalArea),
-                rank: result.areaRank
             )
 
             Divider()

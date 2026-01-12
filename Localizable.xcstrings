@@ -32,6 +32,16 @@
     "%lld 点" : {
 
     },
+    "%lldm · %llds" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lldm · %2$llds"
+          }
+        }
+      }
+    },
     "%lld秒后重发" : {
       "localizations" : {
         "en" : {
@@ -452,9 +462,6 @@
     "探索" : {
 
     },
-    "探索中..." : {
-
-    },
     "探索失败" : {
 
     },
@@ -743,6 +750,9 @@
           }
         }
       }
+    },
+    "结束探索" : {
+
     },
     "背包" : {
 

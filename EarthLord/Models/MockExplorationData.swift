@@ -208,10 +208,6 @@ struct ExplorationStats {
     let totalDistance: Double       // 累计行走距离（米）
     let distanceRank: Int           // 距离排名
 
-    let exploredArea: Double        // 本次探索面积（平方米）
-    let totalArea: Double           // 累计探索面积（平方米）
-    let areaRank: Int               // 面积排名
-
     let duration: TimeInterval      // 探索时长（秒）
     let obtainedItems: [ObtainedItem] // 获得的物品列表
 }
@@ -499,11 +495,6 @@ struct MockExplorationData {
         totalDistance: 15000,       // 累计行走 15000 米
         distanceRank: 42,           // 距离排名第 42 名
 
-        // 探索面积统计
-        exploredArea: 50000,        // 本次探索 5 万平方米
-        totalArea: 250000,          // 累计探索 25 万平方米
-        areaRank: 38,               // 面积排名第 38 名
-
         // 探索时长
         duration: 1800,             // 30 分钟（1800 秒）
 
@@ -545,17 +536,6 @@ struct MockExplorationData {
             return String(format: "%.1f 公里", meters / 1000)
         } else {
             return String(format: "%.0f 米", meters)
-        }
-    }
-
-    /// 格式化面积显示
-    static func formatArea(_ squareMeters: Double) -> String {
-        if squareMeters >= 1_000_000 {
-            return String(format: "%.2f 平方公里", squareMeters / 1_000_000)
-        } else if squareMeters >= 10000 {
-            return String(format: "%.1f 万平方米", squareMeters / 10000)
-        } else {
-            return String(format: "%.0f 平方米", squareMeters)
         }
     }
 

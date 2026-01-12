@@ -433,9 +433,6 @@ struct POIDetailView: View {
             walkingDistance: Double.random(in: 50...200),
             totalDistance: Double.random(in: 1000...5000),
             distanceRank: Int.random(in: 10...100),
-            exploredArea: Double.random(in: 100...500),
-            totalArea: Double.random(in: 2000...10000),
-            areaRank: Int.random(in: 10...100),
             duration: TimeInterval(Int.random(in: 60...300)),
             obtainedItems: items
         )

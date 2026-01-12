@@ -165,10 +165,19 @@ struct MapTabView: View {
                 deniedPermissionCard
             }
 
-            // 速度警告横幅
+            // 圈地速度警告横幅
             if let warning = locationManager.speedWarning {
                 VStack {
-                    speedWarningBanner(warning: warning)
+                    speedWarningBanner(warning: warning, isTracking: true)
+                        .padding(.top, 60) // 避免遮挡状态栏
+                    Spacer()
+                }
+            }
+
+            // 探索速度警告横幅
+            if let warning = explorationManager.speedWarning {
+                VStack {
+                    explorationSpeedWarningBanner(warning: warning)
                         .padding(.top, 60) // 避免遮挡状态栏
                     Spacer()
                 }
@@ -243,9 +252,10 @@ struct MapTabView: View {
             if let result = explorationResult {
                 ExplorationResultView(result: result)
             } else {
+                // 显示探索失败
                 ExplorationResultView(
                     result: nil,
-                    errorMessage: "探索数据加载失败"
+                    errorMessage: explorationManager.failureReason ?? "探索失败"
                 )
             }
         }
@@ -490,8 +500,8 @@ struct MapTabView: View {
         }
     }
 
-    /// 速度警告横幅
-    private func speedWarningBanner(warning: String) -> some View {
+    /// 圈地速度警告横幅
+    private func speedWarningBanner(warning: String, isTracking: Bool) -> some View {
         HStack(spacing: 12) {
             // 警告图标
             Image(systemName: "exclamationmark.triangle.fill")
@@ -509,7 +519,7 @@ struct MapTabView: View {
         .padding(.vertical, 16)
         .background(
             // 根据是否还在追踪显示不同颜色
-            locationManager.isTracking
+            isTracking
                 ? Color.orange // 警告：橙色
                 : Color.red    // 已停止：红色
         )
@@ -518,6 +528,36 @@ struct MapTabView: View {
         .padding(.horizontal, 20)
         .transition(.move(edge: .top).combined(with: .opacity))
         .animation(.spring(), value: locationManager.speedWarning)
+    }
+
+    /// 探索速度警告横幅
+    private func explorationSpeedWarningBanner(warning: String) -> some View {
+        HStack(spacing: 12) {
+            // 警告图标
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 20))
+                .foregroundColor(.white)
+
+            // 警告文字
+            Text(warning)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.white)
+
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(
+            // 根据是否还在探索显示不同颜色
+            explorationManager.isExploring
+                ? Color.orange // 警告：橙色
+                : Color.red    // 已停止：红色
+        )
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.3), radius: 8)
+        .padding(.horizontal, 20)
+        .transition(.move(edge: .top).combined(with: .opacity))
+        .animation(.spring(), value: explorationManager.speedWarning)
     }
 
     /// 验证结果横幅（根据验证结果显示成功或失败）
@@ -667,10 +707,20 @@ struct MapTabView: View {
         // 1. 停止探索管理器
         let result = explorationManager.stopExploration()
 
-        // 2. 生成奖励
+        // 2. 检查是否探索失败
+        if explorationManager.explorationFailed {
+            print("❌ 探索失败: \(explorationManager.failureReason ?? "未知原因")")
+
+            // 显示失败结果
+            explorationResult = nil
+            showExplorationResult = true
+            return
+        }
+
+        // 3. 生成奖励
         let reward = RewardGenerator.generateReward(distance: result.distance)
 
-        // 3. 保存探索记录到数据库
+        // 4. 保存探索记录到数据库
         do {
             try await saveExplorationSession(
                 distance: result.distance,
@@ -684,7 +734,7 @@ struct MapTabView: View {
             print("❌ 保存探索记录失败: \(error)")
         }
 
-        // 4. 添加物品到背包
+        // 5. 添加物品到背包
         if !reward.items.isEmpty {
             do {
                 try await inventoryManager.addItems(reward.items)
@@ -694,7 +744,7 @@ struct MapTabView: View {
             }
         }
 
-        // 5. 构建探索结果数据
+        // 6. 构建探索结果数据
         let obtainedItems = reward.items.map { item in
             ObtainedItem(
                 id: UUID().uuidString,
@@ -708,14 +758,11 @@ struct MapTabView: View {
             walkingDistance: result.distance,
             totalDistance: result.distance, // TODO: 累计距离需要从数据库查询
             distanceRank: 1, // TODO: 排名需要从数据库计算
-            exploredArea: 0, // 暂时不计算面积
-            totalArea: 0,
-            areaRank: 1,
             duration: result.duration,
             obtainedItems: obtainedItems
         )
 
-        // 6. 显示探索结果
+        // 7. 显示探索结果
         showExplorationResult = true
     }
 
