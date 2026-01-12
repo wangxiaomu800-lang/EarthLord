@@ -11,14 +11,14 @@ import SwiftUI
 struct BackpackView: View {
     // MARK: - 状态
 
+    /// 背包管理器
+    @ObservedObject var inventoryManager = InventoryManager.shared
+
     /// 搜索关键词
     @State private var searchText: String = ""
 
     /// 当前选中的分类筛选（nil 表示全部）
     @State private var selectedCategory: ItemCategory? = nil
-
-    /// 背包物品列表
-    @State private var backpackItems: [BackpackItem] = MockExplorationData.backpackItems
 
     /// 动画容量值
     @State private var animatedCapacity: Double = 0.0
@@ -35,7 +35,13 @@ struct BackpackView: View {
 
     /// 当前背包使用量（根据物品重量计算）
     private var currentCapacity: Double {
-        return MockExplorationData.calculateTotalWeight()
+        var totalWeight: Double = 0
+        for item in inventoryManager.inventoryItems {
+            if let definition = MockExplorationData.findItemDefinition(by: item.itemId) {
+                totalWeight += definition.weight * Double(item.quantity)
+            }
+        }
+        return totalWeight
     }
 
     /// 使用百分比
@@ -45,7 +51,7 @@ struct BackpackView: View {
 
     /// 筛选后的物品列表
     private var filteredItems: [BackpackItem] {
-        var result = backpackItems
+        var result = inventoryManager.inventoryItems
 
         // 按分类筛选
         if let category = selectedCategory {
@@ -116,6 +122,14 @@ struct BackpackView: View {
         }
         .navigationTitle("背包")
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            // 加载背包数据
+            do {
+                try await inventoryManager.loadInventory()
+            } catch {
+                print("❌ 加载背包失败: \(error)")
+            }
+        }
     }
 
     // MARK: - 子视图

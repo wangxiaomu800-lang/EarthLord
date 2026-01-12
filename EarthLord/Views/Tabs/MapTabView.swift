@@ -70,11 +70,17 @@ struct MapTabView: View {
 
     // MARK: - 探索功能状态
 
-    /// 是否正在探索
-    @State private var isExploring = false
+    /// 探索管理器
+    @ObservedObject var explorationManager = ExplorationManager.shared
+
+    /// 背包管理器
+    @ObservedObject var inventoryManager = InventoryManager.shared
 
     /// 是否显示探索结果
     @State private var showExplorationResult = false
+
+    /// 探索结果数据
+    @State private var explorationResult: ExplorationStats?
 
     // MARK: - 视图主体
 
@@ -233,11 +239,15 @@ struct MapTabView: View {
         } message: {
             Text("请在设置中开启定位权限，以便在地图上显示您的位置")
         }
-        .sheet(isPresented: $showExplorationResult, onDismiss: {
-            // sheet 关闭后确保探索状态已重置
-            isExploring = false
-        }) {
-            ExplorationResultView(result: MockExplorationData.explorationResult)
+        .sheet(isPresented: $showExplorationResult) {
+            if let result = explorationResult {
+                ExplorationResultView(result: result)
+            } else {
+                ExplorationResultView(
+                    result: nil,
+                    errorMessage: "探索数据加载失败"
+                )
+            }
         }
     }
 
@@ -448,35 +458,36 @@ struct MapTabView: View {
     /// 探索按钮
     private var exploreButton: some View {
         Button(action: {
-            performExploration()
+            toggleExploration()
         }) {
             HStack(spacing: 8) {
                 // 图标
-                if isExploring {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        .scaleEffect(0.8)
-                } else {
-                    Image(systemName: "binoculars.fill")
-                        .font(.system(size: 16))
-                }
+                Image(systemName: explorationManager.isExploring ? "stop.fill" : "binoculars.fill")
+                    .font(.system(size: 16))
 
-                // 文本
-                Text(isExploring ? "探索中..." : "探索")
-                    .font(.system(size: 14, weight: .semibold))
+                // 文本和数据
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(explorationManager.isExploring ? "结束探索" : "探索")
+                        .font(.system(size: 14, weight: .semibold))
+
+                    // 探索中显示距离和时长
+                    if explorationManager.isExploring {
+                        Text("\(Int(explorationManager.currentDistance))m · \(Int(explorationManager.currentDuration))s")
+                            .font(.system(size: 11))
+                    }
+                }
             }
             .foregroundColor(.white)
-            .padding(.horizontal, 24)
+            .padding(.horizontal, 20)
             .padding(.vertical, 14)
             .background(
-                isExploring
-                    ? ApocalypseTheme.textMuted
+                explorationManager.isExploring
+                    ? Color.red
                     : Color(red: 1.0, green: 0.42, blue: 0.21) // 橙色 #FF6B35
             )
             .cornerRadius(28)
             .shadow(color: .black.opacity(0.25), radius: 8, x: 0, y: 4)
         }
-        .disabled(isExploring)
     }
 
     /// 速度警告横幅
@@ -636,19 +647,129 @@ struct MapTabView: View {
         }
     }
 
-    /// 执行探索
-    private func performExploration() {
-        // 标记为探索中
-        isExploring = true
-        print("🔍 开始探索附近区域...")
-
-        // 模拟探索过程（1.5秒）
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            // 探索完成
-            isExploring = false
-            showExplorationResult = true
-            print("✅ 探索完成，显示结果")
+    /// 切换探索状态
+    private func toggleExploration() {
+        if explorationManager.isExploring {
+            // 结束探索
+            Task {
+                await endExploration()
+            }
+        } else {
+            // 开始探索
+            explorationManager.startExploration()
         }
+    }
+
+    /// 结束探索并处理奖励
+    private func endExploration() async {
+        print("🛑 结束探索")
+
+        // 1. 停止探索管理器
+        let result = explorationManager.stopExploration()
+
+        // 2. 生成奖励
+        let reward = RewardGenerator.generateReward(distance: result.distance)
+
+        // 3. 保存探索记录到数据库
+        do {
+            try await saveExplorationSession(
+                distance: result.distance,
+                duration: result.duration,
+                startLocation: result.startLocation,
+                endLocation: result.endLocation,
+                rewardTier: reward.tier,
+                items: reward.items
+            )
+        } catch {
+            print("❌ 保存探索记录失败: \(error)")
+        }
+
+        // 4. 添加物品到背包
+        if !reward.items.isEmpty {
+            do {
+                try await inventoryManager.addItems(reward.items)
+                print("✅ 物品已添加到背包")
+            } catch {
+                print("❌ 添加物品到背包失败: \(error)")
+            }
+        }
+
+        // 5. 构建探索结果数据
+        let obtainedItems = reward.items.map { item in
+            ObtainedItem(
+                id: UUID().uuidString,
+                itemId: item.itemId,
+                quantity: item.quantity,
+                quality: item.quality.map { ItemQuality(rawValue: $0) } ?? nil
+            )
+        }
+
+        explorationResult = ExplorationStats(
+            walkingDistance: result.distance,
+            totalDistance: result.distance, // TODO: 累计距离需要从数据库查询
+            distanceRank: 1, // TODO: 排名需要从数据库计算
+            exploredArea: 0, // 暂时不计算面积
+            totalArea: 0,
+            areaRank: 1,
+            duration: result.duration,
+            obtainedItems: obtainedItems
+        )
+
+        // 6. 显示探索结果
+        showExplorationResult = true
+    }
+
+    /// 保存探索记录到数据库
+    private func saveExplorationSession(
+        distance: Double,
+        duration: TimeInterval,
+        startLocation: CLLocationCoordinate2D?,
+        endLocation: CLLocationCoordinate2D?,
+        rewardTier: RewardTier,
+        items: [RewardItem]
+    ) async throws {
+        let supabase = SupabaseConfig.shared
+
+        guard let userId = try? await supabase.auth.session.user.id else {
+            print("❌ 用户未登录")
+            return
+        }
+
+        // 使用 Encodable 结构体
+        struct ExplorationSessionInsert: Encodable {
+            let user_id: UUID
+            let start_time: Date
+            let end_time: Date
+            let duration: Int
+            let start_lat: Double?
+            let start_lng: Double?
+            let end_lat: Double?
+            let end_lng: Double?
+            let total_distance: Double
+            let reward_tier: String
+            let status: String
+        }
+
+        let session = ExplorationSessionInsert(
+            user_id: userId,
+            start_time: Date().addingTimeInterval(-duration),
+            end_time: Date(),
+            duration: Int(duration),
+            start_lat: startLocation?.latitude,
+            start_lng: startLocation?.longitude,
+            end_lat: endLocation?.latitude,
+            end_lng: endLocation?.longitude,
+            total_distance: distance,
+            reward_tier: rewardTier.rawValue,
+            status: "completed"
+        )
+
+        try await supabase
+            .from("exploration_sessions")
+            .insert(session)
+            .execute()
+
+        print("✅ 探索记录已保存")
     }
 
     /// 切换路径追踪状态
