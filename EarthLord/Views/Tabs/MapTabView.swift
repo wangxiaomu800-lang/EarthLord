@@ -82,6 +82,25 @@ struct MapTabView: View {
     /// 探索结果数据
     @State private var explorationResult: ExplorationStats?
 
+    // MARK: - 计算属性
+
+    /// 下一等级信息
+    private var nextTierInfo: (target: Double, name: String)? {
+        let distance = explorationManager.currentDistance
+
+        if distance < 200 {
+            return (200, "铜级")
+        } else if distance < 500 {
+            return (500, "银级")
+        } else if distance < 1000 {
+            return (1000, "金级")
+        } else if distance < 2000 {
+            return (2000, "钻石")
+        } else {
+            return nil // 已达最高级
+        }
+    }
+
     // MARK: - 视图主体
 
     var body: some View {
@@ -480,10 +499,17 @@ struct MapTabView: View {
                     Text(explorationManager.isExploring ? "结束探索" : "探索")
                         .font(.system(size: 14, weight: .semibold))
 
-                    // 探索中显示距离和时长
+                    // 探索中显示距离和下一等级
                     if explorationManager.isExploring {
-                        Text("\(Int(explorationManager.currentDistance))m · \(Int(explorationManager.currentDuration))s")
-                            .font(.system(size: 11))
+                        if let nextTier = nextTierInfo {
+                            // 显示距离和下一等级进度
+                            Text("\(Int(explorationManager.currentDistance))m / \(Int(nextTier.target))m \(nextTier.name)")
+                                .font(.system(size: 11))
+                        } else {
+                            // 已达最高级，只显示距离
+                            Text("\(Int(explorationManager.currentDistance))m 钻石")
+                                .font(.system(size: 11))
+                        }
                     }
                 }
             }
@@ -702,14 +728,16 @@ struct MapTabView: View {
 
     /// 结束探索并处理奖励
     private func endExploration() async {
-        print("🛑 结束探索")
+        print("\n🏁 ========== 结束探索 ==========")
 
         // 1. 停止探索管理器
         let result = explorationManager.stopExploration()
+        print("   📊 探索结果: \(result.distance)m, \(result.duration)s")
 
         // 2. 检查是否探索失败
         if explorationManager.explorationFailed {
-            print("❌ 探索失败: \(explorationManager.failureReason ?? "未知原因")")
+            print("   ❌ 探索失败: \(explorationManager.failureReason ?? "未知原因")")
+            print("🏁 ========== 结束处理 ==========\n")
 
             // 显示失败结果
             explorationResult = nil
@@ -718,10 +746,17 @@ struct MapTabView: View {
         }
 
         // 3. 生成奖励
+        print("   🎁 生成奖励...")
         let reward = RewardGenerator.generateReward(distance: result.distance)
+        print("      等级: \(reward.tier.rawValue)")
+        print("      物品数: \(reward.items.count)")
+        for (index, item) in reward.items.enumerated() {
+            print("      [\(index + 1)] \(item.itemId) x\(item.quantity) (品质: \(item.quality ?? -1))")
+        }
 
         // 4. 保存探索记录到数据库
         do {
+            print("   💾 保存探索记录到数据库...")
             try await saveExplorationSession(
                 distance: result.distance,
                 duration: result.duration,
@@ -730,21 +765,26 @@ struct MapTabView: View {
                 rewardTier: reward.tier,
                 items: reward.items
             )
+            print("      ✅ 探索记录保存成功")
         } catch {
-            print("❌ 保存探索记录失败: \(error)")
+            print("      ❌ 保存探索记录失败: \(error)")
         }
 
         // 5. 添加物品到背包
         if !reward.items.isEmpty {
             do {
+                print("   📦 调用 inventoryManager.addItems...")
                 try await inventoryManager.addItems(reward.items)
-                print("✅ 物品已添加到背包")
+                print("   ✅ 物品已成功添加到背包")
             } catch {
-                print("❌ 添加物品到背包失败: \(error)")
+                print("   ❌ 添加物品到背包失败: \(error)")
             }
+        } else {
+            print("   ℹ️ 没有获得物品")
         }
 
         // 6. 构建探索结果数据
+        print("   📋 构建探索结果数据...")
         let obtainedItems = reward.items.map { item in
             ObtainedItem(
                 id: UUID().uuidString,
@@ -763,7 +803,9 @@ struct MapTabView: View {
         )
 
         // 7. 显示探索结果
+        print("   📱 显示探索结果界面")
         showExplorationResult = true
+        print("🏁 ========== 结束处理完成 ==========\n")
     }
 
     /// 保存探索记录到数据库

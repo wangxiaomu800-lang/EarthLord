@@ -40,15 +40,18 @@ class InventoryManager: ObservableObject {
 
     /// 加载背包物品
     func loadInventory() async throws {
-        print("📦 加载背包物品")
+        print("\n🎒 ========== 加载背包物品 ==========")
         isLoading = true
         errorMessage = nil
 
         do {
             // 获取当前用户ID
             guard let userId = try? await supabase.auth.session.user.id else {
+                print("   ❌ 用户未登录")
                 throw InventoryError.notAuthenticated
             }
+
+            print("   👤 用户ID: \(userId)")
 
             // 查询背包物品
             let response: [InventoryItemDTO] = try await supabase
@@ -58,6 +61,8 @@ class InventoryManager: ObservableObject {
                 .order("obtained_at", ascending: false)
                 .execute()
                 .value
+
+            print("   📊 数据库返回: \(response.count) 条记录")
 
             // 转换为 BackpackItem
             inventoryItems = response.map { dto in
@@ -70,10 +75,15 @@ class InventoryManager: ObservableObject {
                 )
             }
 
-            print("✅ 加载了 \(inventoryItems.count) 件物品")
+            print("   ✅ 加载了 \(inventoryItems.count) 件物品:")
+            for (index, item) in inventoryItems.enumerated() {
+                print("      [\(index + 1)] \(item.itemId) x\(item.quantity)")
+            }
+
             isLoading = false
+            print("🎒 ========== 加载完成 ==========\n")
         } catch {
-            print("❌ 加载背包失败: \(error)")
+            print("   ❌ 加载背包失败: \(error)")
             errorMessage = error.localizedDescription
             isLoading = false
             throw error
@@ -84,19 +94,34 @@ class InventoryManager: ObservableObject {
     /// - Parameters:
     ///   - items: 要添加的物品列表
     func addItems(_ items: [RewardItem]) async throws {
-        print("📦 添加物品到背包: \(items.count) 件")
+        print("\n📦 ========== 添加物品到背包 ==========")
+        print("   物品数量: \(items.count)")
+
+        for (index, item) in items.enumerated() {
+            print("   [\(index + 1)] \(item.itemId) x\(item.quantity) (品质: \(item.quality ?? -1))")
+        }
 
         // 获取当前用户ID
         guard let userId = try? await supabase.auth.session.user.id else {
+            print("   ❌ 用户未登录")
             throw InventoryError.notAuthenticated
         }
 
+        print("   👤 用户ID: \(userId)")
+
         for item in items {
-            try await addSingleItem(userId: userId, item: item)
+            do {
+                try await addSingleItem(userId: userId, item: item)
+            } catch {
+                print("   ❌ 添加物品失败: \(item.itemId) - \(error)")
+                throw error
+            }
         }
 
+        print("   🔄 重新加载背包...")
         // 重新加载背包
         try await loadInventory()
+        print("📦 ========== 添加完成 ==========\n")
     }
 
     /// 移除物品
@@ -143,6 +168,8 @@ class InventoryManager: ObservableObject {
 
     /// 添加单个物品
     private func addSingleItem(userId: UUID, item: RewardItem) async throws {
+        print("      🔍 检查物品: \(item.itemId)")
+
         // 检查物品是否已存在（不考虑品质，后续可优化）
         let existing: [InventoryItemDTO] = try await supabase
             .from("inventory_items")
@@ -152,6 +179,8 @@ class InventoryManager: ObservableObject {
             .execute()
             .value
 
+        print("         找到 \(existing.count) 条匹配记录")
+
         // 找到匹配品质的物品
         let matchingItem = existing.first { dto in
             dto.quality == item.quality
@@ -160,15 +189,18 @@ class InventoryManager: ObservableObject {
         if let existingItem = matchingItem {
             // 物品已存在，增加数量
             let newQuantity = existingItem.quantity + item.quantity
+            print("         📝 更新数量: \(existingItem.quantity) -> \(newQuantity)")
+
             try await supabase
                 .from("inventory_items")
                 .update(["quantity": newQuantity])
                 .eq("id", value: existingItem.id)
                 .execute()
 
-            print("✅ 更新物品数量: \(item.itemId) -> \(newQuantity)")
+            print("         ✅ 更新成功")
         } else {
             // 物品不存在，新增
+            print("         ➕ 新增物品")
             let newItem = InventoryItemInsertDTO(
                 user_id: userId,
                 item_id: item.itemId,
@@ -181,7 +213,7 @@ class InventoryManager: ObservableObject {
                 .insert(newItem)
                 .execute()
 
-            print("✅ 新增物品: \(item.itemId) x\(item.quantity)")
+            print("         ✅ 新增成功: \(item.itemId) x\(item.quantity)")
         }
     }
 }
