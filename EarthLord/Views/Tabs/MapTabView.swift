@@ -202,6 +202,15 @@ struct MapTabView: View {
                 }
             }
 
+            // 物品发现通知横幅
+            if let notification = explorationManager.itemDiscoveryNotification {
+                VStack {
+                    itemDiscoveryBanner(message: notification)
+                        .padding(.top, 60) // 避免遮挡状态栏
+                    Spacer()
+                }
+            }
+
             // 验证结果横幅
             if showValidationBanner {
                 VStack {
@@ -584,6 +593,40 @@ struct MapTabView: View {
         .padding(.horizontal, 20)
         .transition(.move(edge: .top).combined(with: .opacity))
         .animation(.spring(), value: explorationManager.speedWarning)
+    }
+
+    /// 物品发现通知横幅
+    private func itemDiscoveryBanner(message: String) -> some View {
+        HStack(spacing: 12) {
+            // 礼物图标
+            Image(systemName: "gift.fill")
+                .font(.system(size: 20))
+                .foregroundColor(.white)
+
+            // 通知文字
+            Text(message)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.white)
+
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(
+            LinearGradient(
+                colors: [
+                    ApocalypseTheme.success,
+                    ApocalypseTheme.success.opacity(0.8)
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        )
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.3), radius: 8)
+        .padding(.horizontal, 20)
+        .transition(.move(edge: .top).combined(with: .opacity))
+        .animation(.spring(), value: explorationManager.itemDiscoveryNotification)
     }
 
     /// 验证结果横幅（根据验证结果显示成功或失败）

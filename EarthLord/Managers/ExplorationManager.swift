@@ -42,6 +42,9 @@ class ExplorationManager: NSObject, ObservableObject {
     /// 探索失败原因
     @Published var failureReason: String?
 
+    /// 物品发现通知
+    @Published var itemDiscoveryNotification: String?
+
     // MARK: - 私有属性
 
     /// 位置管理器
@@ -67,6 +70,9 @@ class ExplorationManager: NSObject, ObservableObject {
 
     /// 速度警告开始时间
     private var speedWarningStartTime: Date?
+
+    /// 上次达到的奖励等级（用于检测等级提升）
+    private var lastRewardTier: RewardTier = .none
 
     // MARK: - 常量
 
@@ -117,6 +123,8 @@ class ExplorationManager: NSObject, ObservableObject {
         speedWarningStartTime = nil
         explorationFailed = false
         failureReason = nil
+        lastRewardTier = .none
+        itemDiscoveryNotification = nil
 
         // 记录开始位置
         if let location = LocationManager.shared.userLocation {
@@ -262,6 +270,9 @@ class ExplorationManager: NSObject, ObservableObject {
             print("📏 ========== 距离统计 ==========")
             print("   ➕ 新增: \(String(format: "%.2f", distance))m")
             print("   📍 累计: \(String(format: "%.2f", currentDistance))m")
+
+            // 检查是否达到新的奖励等级
+            checkRewardTierUpgrade()
         }
 
         // 5. 保存为有效点
@@ -323,6 +334,46 @@ class ExplorationManager: NSObject, ObservableObject {
 
         // 停止探索
         _ = stopExploration()
+    }
+
+    /// 检查奖励等级提升
+    private func checkRewardTierUpgrade() {
+        let currentTier = RewardGenerator.calculateTier(distance: currentDistance)
+
+        // 如果等级提升
+        if currentTier.rawValue > lastRewardTier.rawValue {
+            lastRewardTier = currentTier
+
+            // 生成通知消息
+            let tierName: String
+            let itemCount: Int
+
+            switch currentTier {
+            case .none:
+                return // 无奖励不通知
+            case .bronze:
+                tierName = "铜级"
+                itemCount = 1
+            case .silver:
+                tierName = "银级"
+                itemCount = 2
+            case .gold:
+                tierName = "金级"
+                itemCount = 3
+            case .diamond:
+                tierName = "钻石"
+                itemCount = 5
+            }
+
+            itemDiscoveryNotification = "🎉 达到\(tierName)！预计获得\(itemCount)件物品"
+            print("   🎁 等级提升: \(tierName) (预计\(itemCount)件物品)")
+
+            // 3秒后自动清除通知
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                itemDiscoveryNotification = nil
+            }
+        }
     }
 }
 

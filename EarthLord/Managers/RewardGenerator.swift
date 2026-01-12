@@ -149,10 +149,10 @@ struct RewardGenerator {
         return (tier, items)
     }
 
-    // MARK: - 私有方法
+    // MARK: - 公开方法
 
     /// 根据距离计算奖励等级
-    private static func calculateTier(distance: Double) -> RewardTier {
+    static func calculateTier(distance: Double) -> RewardTier {
         if distance < 200 {
             return .none
         } else if distance < 500 {
