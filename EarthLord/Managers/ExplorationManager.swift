@@ -232,17 +232,22 @@ class ExplorationManager: NSObject, ObservableObject {
             let distance = location.distance(from: lastLocation)
             let timeInterval = location.timestamp.timeIntervalSince(lastTime)
 
+            print("⏱️ ========== 速度计算详情 ==========")
+            print("   📏 距离: \(String(format: "%.2f", distance))m")
+            print("   ⏰ 时间间隔: \(String(format: "%.2f", timeInterval))s")
+
             if timeInterval > 0 {
                 calculatedSpeed = distance / timeInterval
                 currentSpeed = calculatedSpeed
 
                 let speedKmh = calculatedSpeed * 3.6
-                print("📊 计算速度: \(String(format: "%.2f", calculatedSpeed))m/s = \(String(format: "%.2f", speedKmh))km/h")
+                print("   🚀 计算速度: \(String(format: "%.2f", calculatedSpeed))m/s = \(String(format: "%.1f", speedKmh))km/h")
+                print("   📱 GPS速度: \(String(format: "%.2f", location.speed))m/s = \(String(format: "%.1f", location.speed * 3.6))km/h")
 
                 // 检查是否超速（30km/h = 8.33m/s）
                 if calculatedSpeed > speedLimit {
                     print("⚠️ ========== 速度超限 ==========")
-                    print("   当前速度: \(String(format: "%.2f", speedKmh))km/h")
+                    print("   当前速度: \(String(format: "%.1f", speedKmh))km/h")
                     print("   限制速度: 30km/h")
                     handleSpeedWarning(speed: calculatedSpeed)
                 } else {
@@ -346,27 +351,22 @@ class ExplorationManager: NSObject, ObservableObject {
 
             // 生成通知消息
             let tierName: String
-            let itemCount: Int
 
             switch currentTier {
             case .none:
                 return // 无奖励不通知
             case .bronze:
-                tierName = "铜级"
-                itemCount = 1
+                tierName = "🥉 铜级"
             case .silver:
-                tierName = "银级"
-                itemCount = 2
+                tierName = "🥈 银级"
             case .gold:
-                tierName = "金级"
-                itemCount = 3
+                tierName = "🥇 金级"
             case .diamond:
-                tierName = "钻石"
-                itemCount = 5
+                tierName = "💎 钻石"
             }
 
-            itemDiscoveryNotification = "🎉 达到\(tierName)！预计获得\(itemCount)件物品"
-            print("   🎁 等级提升: \(tierName) (预计\(itemCount)件物品)")
+            itemDiscoveryNotification = "🎉 达到\(tierName)！"
+            print("   🎁 等级提升: \(tierName) (距离: \(Int(currentDistance))m)")
 
             // 3秒后自动清除通知
             Task { @MainActor in

@@ -135,16 +135,19 @@ struct RewardGenerator {
 
         // 3. 生成物品
         var items: [RewardItem] = []
-        for _ in 0..<tier.itemCount {
+        let targetCount = tier.itemCount
+        print("🎯 目标物品数: \(targetCount)")
+
+        for index in 0..<targetCount {
             if let item = generateRandomItem(tier: tier) {
                 items.append(item)
+                print("   [\(index + 1)/\(targetCount)] 生成: \(item.itemId) x\(item.quantity) (品质: \(item.quality ?? -1))")
+            } else {
+                print("   ❌ [\(index + 1)/\(targetCount)] 生成失败！")
             }
         }
 
-        print("🎁 生成了 \(items.count) 件物品")
-        for item in items {
-            print("   - \(item.itemId) x\(item.quantity) (品质: \(item.quality ?? -1))")
-        }
+        print("✅ 最终生成了 \(items.count)/\(targetCount) 件物品")
 
         return (tier, items)
     }
