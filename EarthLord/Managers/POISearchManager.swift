@@ -20,14 +20,17 @@ class POISearchManager {
     /// - Parameters:
     ///   - center: 中心坐标
     ///   - radiusInMeters: 搜索半径（米），默认 1000 米
-    /// - Returns: POI 列表，按距离排序，最多 20 个
+    ///   - maxResults: 最多返回的 POI 数量，默认 20（iOS 地理围栏限制）
+    /// - Returns: POI 列表，按距离排序
     static func searchNearbyPOIs(
         center: CLLocationCoordinate2D,
-        radiusInMeters: Double = 1000
+        radiusInMeters: Double = 1000,
+        maxResults: Int = 20
     ) async throws -> [POI] {
         print("\n🔍 ========== 搜索附近 POI ==========")
         print("   📍 中心坐标: (\(center.latitude), \(center.longitude))")
         print("   📏 搜索半径: \(radiusInMeters)m")
+        print("   🎯 最多返回: \(maxResults) 个")
 
         // 定义要搜索的 POI 类型
         let searchQueries = [
@@ -100,8 +103,8 @@ class POISearchManager {
         // 按距离排序
         uniqueItems.sort { $0.1 < $1.1 }
 
-        // 限制最多 20 个（iOS 地理围栏限制）
-        let limit = min(uniqueItems.count, 20)
+        // 限制返回数量
+        let limit = min(uniqueItems.count, maxResults)
         let selectedItems = Array(uniqueItems.prefix(limit))
 
         print("   📊 选取最近的 \(limit) 个地点")

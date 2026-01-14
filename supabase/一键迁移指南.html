@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地球新主 - 数据库迁移指南</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px;
+        }
+        .step {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f7f9fc;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+        .step h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .step p {
+            color: #444;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        .sql-container {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            position: relative;
+        }
+        .sql-container pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .copy-btn:hover {
+            background: #5568d3;
+        }
+        .success-message {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .success-message h3 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+        .success-message ul {
+            margin-left: 20px;
+            color: #065f46;
+        }
+        .success-message li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 数据库迁移指南</h1>
+            <p>地球新主 - 附近玩家检测系统</p>
+        </div>
+
+        <div class="content">
+            <div class="step">
+                <h2>📋 第一步：打开 Supabase SQL Editor</h2>
+                <p>点击下方按钮打开 Supabase Dashboard 的 SQL Editor 页面</p>
+                <div class="button-group">
+                    <a href="https://supabase.com/dashboard/project/vuqfufnrxzsmkzmhtuhw/sql/new"
+                       target="_blank"
+                       class="btn btn-primary">
+                        🌐 打开 SQL Editor
+                    </a>
+                </div>
+            </div>
+
+            <div class="step">
+                <h2>📝 第二步：复制 SQL 代码</h2>
+                <p>点击下方的"复制 SQL"按钮，将迁移脚本复制到剪贴板</p>
+                <div class="sql-container" id="sqlContainer">
+                    <button class="copy-btn" onclick="copySql()">📋 复制 SQL</button>
+                    <pre id="sqlCode">-- 地球新主 - 玩家位置追踪系统
+-- 创建时间: 2026-01-14
+
+-- ============================================================================
+-- 1. 启用 PostgreSQL 地理扩展
+-- ============================================================================
+
+CREATE EXTENSION IF NOT EXISTS cube;
+CREATE EXTENSION IF NOT EXISTS earthdistance;
+
+-- ============================================================================
+-- 2. PLAYER_LOCATIONS 表（玩家位置记录）
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.player_locations (
+    player_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    last_update_time TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    is_online BOOLEAN NOT NULL DEFAULT TRUE,
+    earth_location EARTH,
+    CONSTRAINT valid_latitude CHECK (latitude >= -90 AND latitude <= 90),
+    CONSTRAINT valid_longitude CHECK (longitude >= -180 AND longitude <= 180)
+);
+
+CREATE INDEX IF NOT EXISTS idx_player_locations_earth
+    ON public.player_locations USING GIST(earth_location);
+
+CREATE INDEX IF NOT EXISTS idx_player_locations_last_update
+    ON public.player_locations(last_update_time);
+
+CREATE INDEX IF NOT EXISTS idx_player_locations_is_online
+    ON public.player_locations(is_online);
+
+ALTER TABLE public.player_locations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "已认证用户可以读取位置记录用于统计"
+    ON public.player_locations FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "玩家可以更新自己的位置"
+    ON public.player_locations FOR UPDATE TO authenticated
+    USING (auth.uid() = player_id) WITH CHECK (auth.uid() = player_id);
+
+CREATE POLICY "玩家可以插入自己的位置记录"
+    ON public.player_locations FOR INSERT TO authenticated
+    WITH CHECK (auth.uid() = player_id);
+
+-- ============================================================================
+-- 3. 自动更新 earth_location 字段的触发器
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION update_earth_location()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.earth_location := ll_to_earth(NEW.latitude, NEW.longitude);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_player_location_earth
+    BEFORE INSERT OR UPDATE OF latitude, longitude ON public.player_locations
+    FOR EACH ROW EXECUTE FUNCTION update_earth_location();
+
+-- ============================================================================
+-- 4. RPC 函数：统计附近玩家数量
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION count_nearby_players(
+    user_lat DOUBLE PRECISION,
+    user_lng DOUBLE PRECISION,
+    radius_meters DOUBLE PRECISION DEFAULT 1000
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    nearby_count INTEGER;
+    online_threshold TIMESTAMPTZ;
+BEGIN
+    online_threshold := NOW() - INTERVAL '5 minutes';
+
+    SELECT COUNT(*)
+    INTO nearby_count
+    FROM public.player_locations
+    WHERE
+        player_id != auth.uid()
+        AND last_update_time >= online_threshold
+        AND is_online = true
+        AND earth_box(ll_to_earth(user_lat, user_lng), radius_meters)
+            @> ll_to_earth(latitude, longitude)
+        AND earth_distance(ll_to_earth(user_lat, user_lng), ll_to_earth(latitude, longitude))
+            <= radius_meters;
+
+    RETURN nearby_count;
+END;
+$$;
+
+-- ============================================================================
+-- 5. RPC 函数：建议 POI 显示数量
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION suggest_poi_count(
+    nearby_player_count INTEGER
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
+BEGIN
+    CASE
+        WHEN nearby_player_count = 0 THEN RETURN 1;
+        WHEN nearby_player_count BETWEEN 1 AND 5 THEN RETURN 3;
+        WHEN nearby_player_count BETWEEN 6 AND 20 THEN RETURN 6;
+        ELSE RETURN 20;
+    END CASE;
+END;
+$$;
+
+-- ============================================================================
+-- 6. 添加注释
+-- ============================================================================
+
+COMMENT ON TABLE public.player_locations IS '玩家位置记录表，用于附近玩家检测';
+COMMENT ON FUNCTION count_nearby_players IS '统计附近在线玩家数量（不包括自己）';
+COMMENT ON FUNCTION suggest_poi_count IS '根据附近玩家数量建议 POI 显示数量';</pre>
+                </div>
+            </div>
+
+            <div class="step">
+                <h2>▶️ 第三步：粘贴并执行</h2>
+                <p>1. 在 SQL Editor 中，将复制的 SQL 粘贴到编辑器中</p>
+                <p>2. 点击右上角的 <strong>"Run"</strong> 按钮执行</p>
+                <p>3. 等待执行完成（大约 2-3 秒）</p>
+            </div>
+
+            <div class="success-message">
+                <h3>✅ 执行成功后，您应该看到：</h3>
+                <ul>
+                    <li>✅ Extensions created: <strong>cube</strong>, <strong>earthdistance</strong></li>
+                    <li>✅ Table created: <strong>player_locations</strong></li>
+                    <li>✅ Functions created: <strong>count_nearby_players</strong>, <strong>suggest_poi_count</strong></li>
+                    <li>✅ Indexes created: <strong>3 个索引</strong></li>
+                    <li>✅ RLS policies created: <strong>3 个策略</strong></li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <h2>🎮 第四步：重新测试 App</h2>
+                <p>执行完成后，重新运行 App 并开始探索，日志中应该显示：</p>
+                <div class="sql-container">
+                    <pre>📍 开始位置上报（每 30 秒）
+✅ 位置上报成功: (34.2890, 107.7218)
+🔍 查询附近玩家数量...
+✅ 附近有 0 个在线玩家 - 独行者
+💡 建议显示 1 个 POI（附近 0 个玩家）
+✅ 找到 1 个 POI</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copySql() {
+            const sqlCode = document.getElementById('sqlCode').textContent;
+            navigator.clipboard.writeText(sqlCode).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = '✅ 已复制！';
+                btn.style.background = '#10b981';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '#667eea';
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

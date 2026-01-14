@@ -180,9 +180,12 @@ class ExplorationManager: NSObject, ObservableObject {
 
         print("✅ 探索已开始，等待GPS位置更新...")
 
-        // 搜索附近 POI
+        // 开始位置上报
+        PlayerLocationManager.shared.startReporting()
+
+        // 搜索附近 POI（基于玩家密度）
         Task {
-            await searchAndAddPOIs()
+            await searchAndAddPOIsWithDensity()
         }
     }
 
@@ -221,6 +224,9 @@ class ExplorationManager: NSObject, ObservableObject {
         // 重置状态
         isExploring = false
 
+        // 停止位置上报
+        PlayerLocationManager.shared.stopReporting()
+
         // 清除 POI 和地理围栏
         clearPOIs()
 
@@ -236,9 +242,59 @@ class ExplorationManager: NSObject, ObservableObject {
 
     // MARK: - POI 管理方法
 
-    /// 搜索并添加附近的 POI
-    func searchAndAddPOIs() async {
-        print("🔍 开始搜索附近 POI...")
+    /// 搜索并添加附近的 POI（基于玩家密度）
+    func searchAndAddPOIsWithDensity() async {
+        print("\n🔍 ========== 开始搜索附近 POI（基于玩家密度）==========")
+        isLoadingPOIs = true
+
+        guard let userLocation = LocationManager.shared.userLocation else {
+            print("❌ 无法获取用户位置")
+            isLoadingPOIs = false
+            return
+        }
+
+        do {
+            // 1. 查询附近玩家数量
+            print("   📡 查询附近玩家数量...")
+            let nearbyCount = try await PlayerLocationManager.shared.queryNearbyPlayers(
+                latitude: userLocation.latitude,
+                longitude: userLocation.longitude,
+                radiusMeters: 1000
+            )
+
+            // 2. 获取建议的 POI 数量
+            print("   💡 获取建议的 POI 数量...")
+            let suggestedCount = try await PlayerLocationManager.shared.getSuggestedPOICount(
+                nearbyPlayerCount: nearbyCount
+            )
+
+            // 3. 搜索 POI（传入限制数量）
+            print("   🔎 搜索附近真实地点...")
+            let pois = try await POISearchManager.searchNearbyPOIs(
+                center: userLocation,
+                radiusInMeters: 1000,
+                maxResults: suggestedCount
+            )
+
+            await MainActor.run {
+                nearbyPOIs = pois
+                setupGeofences(for: pois)
+                isLoadingPOIs = false
+                print("✅ 找到 \(pois.count) 个 POI（附近 \(nearbyCount) 个玩家，密度：\(PlayerLocationManager.shared.playerDensity.displayName)）")
+            }
+        } catch {
+            print("❌ POI 搜索失败: \(error.localizedDescription)")
+            // 即使失败也尝试使用默认配置搜索
+            print("   🔄 尝试使用默认配置搜索...")
+            await searchAndAddPOIs()
+        }
+
+        print("🔍 ========== POI 搜索完成 ==========\n")
+    }
+
+    /// 搜索并添加附近的 POI（不考虑密度，默认配置）
+    private func searchAndAddPOIs() async {
+        print("🔍 开始搜索附近 POI（默认配置）...")
         isLoadingPOIs = true
 
         guard let userLocation = LocationManager.shared.userLocation else {
