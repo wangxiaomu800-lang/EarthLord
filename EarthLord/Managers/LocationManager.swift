@@ -661,4 +661,38 @@ extension LocationManager: CLLocationManagerDelegate {
             }
         }
     }
+
+    /// 进入地理围栏时调用
+    nonisolated func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
+        Task { @MainActor in
+            print("📍 进入地理围栏: \(region.identifier)")
+
+            // 发布通知（用于 POI 搜刮）
+            if region.identifier.hasPrefix("poi_") {
+                NotificationCenter.default.post(
+                    name: .didEnterPOIRegion,
+                    object: region.identifier
+                )
+                print("   ✅ 已发布 POI 进入通知")
+            }
+        }
+    }
+
+    /// 地理围栏监控失败时调用
+    nonisolated func locationManager(_ manager: CLLocationManager, monitoringDidFailFor region: CLRegion?, withError error: Error) {
+        Task { @MainActor in
+            if let region = region {
+                print("❌ 地理围栏监控失败: \(region.identifier) - \(error.localizedDescription)")
+            } else {
+                print("❌ 地理围栏监控失败: \(error.localizedDescription)")
+            }
+        }
+    }
+}
+
+// MARK: - Notification Names
+
+extension Notification.Name {
+    /// POI 地理围栏进入通知
+    static let didEnterPOIRegion = Notification.Name("didEnterPOIRegion")
 }

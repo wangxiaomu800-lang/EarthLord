@@ -45,6 +45,18 @@ class ExplorationManager: NSObject, ObservableObject {
     /// 物品发现通知
     @Published var itemDiscoveryNotification: String?
 
+    /// POI 列表
+    @Published var nearbyPOIs: [POI] = []
+
+    /// 是否显示 POI 搜刮弹窗
+    @Published var showPOIPopup: Bool = false
+
+    /// 当前接近的 POI
+    @Published var currentPOI: POI?
+
+    /// 是否正在加载 POI
+    @Published var isLoadingPOIs: Bool = false
+
     // MARK: - 私有属性
 
     /// 位置管理器
@@ -74,6 +86,12 @@ class ExplorationManager: NSObject, ObservableObject {
     /// 上次达到的奖励等级（用于检测等级提升）
     private var lastRewardTier: RewardTier = .none
 
+    /// 已搜刮的 POI ID 集合（internal 供 MapViewRepresentable 访问）
+    var scavengedPOIIds: Set<String> = []
+
+    /// 地理围栏通知订阅
+    private var geofenceCancellable: AnyCancellable?
+
     // MARK: - 常量
 
     /// GPS 精度阈值（米）- 精度差于此值的点将被忽略
@@ -101,6 +119,17 @@ class ExplorationManager: NSObject, ObservableObject {
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
         locationManager.distanceFilter = 5 // 移动5米更新一次（更频繁的更新以获得更准确的轨迹）
         locationManager.allowsBackgroundLocationUpdates = false
+
+        // 订阅地理围栏通知
+        geofenceCancellable = NotificationCenter.default
+            .publisher(for: .didEnterPOIRegion)
+            .sink { [weak self] notification in
+                if let identifier = notification.object as? String {
+                    Task { @MainActor in
+                        self?.handlePOIEntry(identifier: identifier)
+                    }
+                }
+            }
     }
 
     // MARK: - 公开方法
@@ -150,6 +179,11 @@ class ExplorationManager: NSObject, ObservableObject {
         }
 
         print("✅ 探索已开始，等待GPS位置更新...")
+
+        // 搜索附近 POI
+        Task {
+            await searchAndAddPOIs()
+        }
     }
 
     /// 停止探索
@@ -187,6 +221,9 @@ class ExplorationManager: NSObject, ObservableObject {
         // 重置状态
         isExploring = false
 
+        // 清除 POI 和地理围栏
+        clearPOIs()
+
         print("📊 ========== 探索统计 ==========")
         print("   📏 总距离: \(String(format: "%.2f", finalDistance)) 米")
         print("   ⏱️ 总时长: \(Int(finalDuration)) 秒 (\(Int(finalDuration/60))分\(Int(finalDuration)%60)秒)")
@@ -195,6 +232,156 @@ class ExplorationManager: NSObject, ObservableObject {
         print("================================")
 
         return (finalDistance, finalDuration, finalStartLocation, finalEndLocation)
+    }
+
+    // MARK: - POI 管理方法
+
+    /// 搜索并添加附近的 POI
+    func searchAndAddPOIs() async {
+        print("🔍 开始搜索附近 POI...")
+        isLoadingPOIs = true
+
+        guard let userLocation = LocationManager.shared.userLocation else {
+            print("❌ 无法获取用户位置")
+            isLoadingPOIs = false
+            return
+        }
+
+        do {
+            let pois = try await POISearchManager.searchNearbyPOIs(center: userLocation)
+            await MainActor.run {
+                nearbyPOIs = pois
+                setupGeofences(for: pois)
+                isLoadingPOIs = false
+                print("✅ 找到 \(pois.count) 个 POI")
+            }
+        } catch {
+            print("❌ POI 搜索失败: \(error)")
+            isLoadingPOIs = false
+        }
+    }
+
+    /// 设置地理围栏
+    private func setupGeofences(for pois: [POI]) {
+        print("\n📍 ========== 设置地理围栏 ==========")
+
+        // 清除旧围栏（只清除 POI 相关的）
+        for region in locationManager.monitoredRegions {
+            if region.identifier.hasPrefix("poi_") {
+                locationManager.stopMonitoring(for: region)
+                print("   🗑️ 清除旧围栏: \(region.identifier)")
+            }
+        }
+
+        // 创建新围栏（最多 20 个）
+        let limit = min(pois.count, 20)
+        print("   📊 将创建 \(limit) 个地理围栏")
+
+        for i in 0..<limit {
+            let poi = pois[i]
+            let region = CLCircularRegion(
+                center: poi.coordinate,
+                radius: 50.0,  // 50 米半径
+                identifier: "poi_\(poi.id)"
+            )
+            region.notifyOnEntry = true
+            region.notifyOnExit = false
+
+            locationManager.startMonitoring(for: region)
+            print("   [\(i + 1)/\(limit)] 📍 \(poi.name) - 半径 50m")
+        }
+
+        print("📍 ========== 地理围栏设置完成 ==========\n")
+    }
+
+    /// 处理进入 POI 范围
+    func handlePOIEntry(identifier: String) {
+        print("\n🎯 ========== 进入 POI 范围 ==========")
+        print("   🆔 Identifier: \(identifier)")
+
+        // 提取 POI ID
+        guard identifier.hasPrefix("poi_") else {
+            print("   ❌ 不是 POI 围栏")
+            return
+        }
+
+        let poiId = String(identifier.dropFirst(4))  // 移除 "poi_" 前缀
+        print("   🔑 POI ID: \(poiId)")
+
+        // 查找 POI
+        guard let poi = nearbyPOIs.first(where: { $0.id == poiId }) else {
+            print("   ❌ 未找到对应的 POI")
+            return
+        }
+
+        print("   📍 POI: \(poi.name)")
+
+        // 检查是否已搜刮
+        if scavengedPOIIds.contains(poi.id) {
+            print("   ℹ️ POI 已搜刮，跳过")
+            return
+        }
+
+        // 显示弹窗
+        currentPOI = poi
+        showPOIPopup = true
+        print("   ✅ 显示搜刮弹窗")
+        print("🎯 ====================================\n")
+    }
+
+    /// 搜刮 POI
+    func scavengePOI(_ poi: POI) -> [RewardItem] {
+        print("\n🎁 ========== 搜刮 POI ==========")
+        print("   📍 地点: \(poi.name)")
+
+        // 标记为已搜刮
+        scavengedPOIIds.insert(poi.id)
+        print("   ✅ 标记为已搜刮")
+
+        // 生成 1-3 件物品（使用铜级奖励池）
+        let itemCount = Int.random(in: 1...3)
+        var items: [RewardItem] = []
+
+        print("   🎯 目标物品数: \(itemCount)")
+
+        for i in 0..<itemCount {
+            if let item = RewardGenerator.generateRandomItem(tier: .bronze) {
+                items.append(item)
+                print("      [\(i + 1)/\(itemCount)] \(item.itemId) x\(item.quantity)")
+            } else {
+                print("      [\(i + 1)/\(itemCount)] 生成失败")
+            }
+        }
+
+        print("   ✅ 生成了 \(items.count) 件物品")
+        print("🎁 ========== 搜刮完成 ==========\n")
+
+        return items
+    }
+
+    /// 清除所有 POI 和地理围栏
+    func clearPOIs() {
+        print("\n🧹 ========== 清除 POI 和地理围栏 ==========")
+
+        // 停止所有 POI 围栏监控
+        var removedCount = 0
+        for region in locationManager.monitoredRegions {
+            if region.identifier.hasPrefix("poi_") {
+                locationManager.stopMonitoring(for: region)
+                removedCount += 1
+            }
+        }
+
+        print("   🗑️ 清除了 \(removedCount) 个地理围栏")
+
+        // 清空数据
+        nearbyPOIs.removeAll()
+        scavengedPOIIds.removeAll()
+        currentPOI = nil
+        showPOIPopup = false
+
+        print("   ✅ 清空了 POI 列表和状态")
+        print("🧹 ========== 清除完成 ==========\n")
     }
 
     // MARK: - 私有方法

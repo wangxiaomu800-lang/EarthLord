@@ -35,6 +35,12 @@ struct MapViewRepresentable: UIViewRepresentable {
     /// 当前用户 ID
     var currentUserId: String?
 
+    /// POI 列表（用于显示地图标记）
+    var pois: [POI]
+
+    /// 已搜刮的 POI ID 集合
+    var scavengedPOIIds: Set<String>
+
     // MARK: - UIViewRepresentable
 
     /// 创建 MKMapView
@@ -76,6 +82,9 @@ struct MapViewRepresentable: UIViewRepresentable {
 
         // 绘制领地
         drawTerritories(on: mapView)
+
+        // 更新 POI 标记
+        updatePOIAnnotations(mapView: mapView)
     }
 
     /// 创建协调器
@@ -151,6 +160,52 @@ struct MapViewRepresentable: UIViewRepresentable {
 
         if !territories.isEmpty {
             print("🏰 已绘制 \(territories.count) 个领地")
+        }
+    }
+
+    // MARK: - POI 标记
+
+    /// 更新 POI 标记
+    private func updatePOIAnnotations(mapView: MKMapView) {
+        // 获取当前地图上的 POI 注解
+        let existingAnnotations = mapView.annotations.compactMap { $0 as? POIAnnotation }
+
+        // 检查是否需要更新
+        let existingIds = Set(existingAnnotations.map { $0.poi.id })
+        let newIds = Set(pois.map { $0.id })
+
+        // 如果 POI 列表没有变化，只更新已搜刮状态
+        if existingIds == newIds {
+            // 更新已搜刮状态
+            for annotation in existingAnnotations {
+                let wasScavenged = annotation.isScavenged
+                let isNowScavenged = scavengedPOIIds.contains(annotation.poi.id)
+                if wasScavenged != isNowScavenged {
+                    annotation.isScavenged = isNowScavenged
+                    // 强制刷新注解视图
+                    mapView.removeAnnotation(annotation)
+                    mapView.addAnnotation(annotation)
+                    print("🏷️ 更新标记状态: \(annotation.poi.name) - \(isNowScavenged ? "已搜刮" : "未搜刮")")
+                }
+            }
+            return
+        }
+
+        // POI 列表有变化，重新添加所有注解
+        print("🗺️ 更新 POI 标记: \(pois.count) 个")
+
+        // 移除旧的 POI 注解
+        mapView.removeAnnotations(existingAnnotations)
+
+        // 添加新的 POI 注解
+        for poi in pois {
+            let isScavenged = scavengedPOIIds.contains(poi.id)
+            let annotation = POIAnnotation(poi: poi, isScavenged: isScavenged)
+            mapView.addAnnotation(annotation)
+        }
+
+        if !pois.isEmpty {
+            print("   ✅ 已添加 \(pois.count) 个 POI 标记")
         }
     }
 
@@ -246,6 +301,69 @@ struct MapViewRepresentable: UIViewRepresentable {
         /// 地图加载失败时调用
         func mapViewDidFailLoadingMap(_ mapView: MKMapView, withError error: Error) {
             print("❌ 地图加载失败: \(error.localizedDescription)")
+        }
+
+        // MARK: - POI 注解渲染
+
+        /// ⭐ 关键方法：渲染 POI 注解视图
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            // 用户位置标记使用默认样式
+            if annotation is MKUserLocation {
+                return nil
+            }
+
+            // POI 标记
+            guard let poiAnnotation = annotation as? POIAnnotation else {
+                return nil
+            }
+
+            let identifier = "POIMarker"
+            var annotationView = mapView.dequeueReusableAnnotationView(
+                withIdentifier: identifier
+            ) as? MKMarkerAnnotationView
+
+            if annotationView == nil {
+                annotationView = MKMarkerAnnotationView(
+                    annotation: annotation,
+                    reuseIdentifier: identifier
+                )
+                annotationView?.canShowCallout = false  // 禁用点击气泡（使用地理围栏弹窗）
+            } else {
+                annotationView?.annotation = annotation
+            }
+
+            let poi = poiAnnotation.poi
+
+            // 根据是否已搜刮设置样式
+            if poiAnnotation.isScavenged {
+                // 已搜刮：灰色 + 50% 透明
+                annotationView?.markerTintColor = UIColor.systemGray
+                annotationView?.alpha = 0.5
+            } else {
+                // 未搜刮：根据 POI 类型设置颜色
+                let markerColor: UIColor
+                switch poi.type {
+                case .supermarket:
+                    markerColor = UIColor.systemGreen
+                case .hospital:
+                    markerColor = UIColor.systemRed
+                case .gasStation:
+                    markerColor = UIColor.systemOrange
+                case .pharmacy:
+                    markerColor = UIColor.systemPurple
+                case .factory:
+                    markerColor = UIColor.systemGray
+                }
+                annotationView?.markerTintColor = markerColor
+                annotationView?.alpha = 1.0
+            }
+
+            // 设置图标（使用 emoji）
+            annotationView?.glyphText = poi.type.emoji
+
+            print("🏷️ 创建标记: \(poi.name) - \(poiAnnotation.isScavenged ? "已搜刮" : "未搜刮")")
+
+            return annotationView
         }
 
         // MARK: - 轨迹渲染

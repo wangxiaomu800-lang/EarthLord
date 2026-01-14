@@ -82,6 +82,15 @@ struct MapTabView: View {
     /// 探索结果数据
     @State private var explorationResult: ExplorationStats?
 
+    /// 是否显示搜刮结果
+    @State private var showScavengeResult = false
+
+    /// 搜刮获得的物品
+    @State private var scavengedItems: [RewardItem] = []
+
+    /// 搜刮的 POI 名称
+    @State private var scavengedPOIName: String = ""
+
     // MARK: - 计算属性
 
     /// 下一等级信息
@@ -119,7 +128,9 @@ struct MapTabView: View {
                     isTracking: locationManager.isTracking,
                     isPathClosed: locationManager.isPathClosed,
                     territories: territories,
-                    currentUserId: authManager.currentUser?.id.uuidString
+                    currentUserId: authManager.currentUser?.id.uuidString,
+                    pois: explorationManager.nearbyPOIs,
+                    scavengedPOIIds: explorationManager.scavengedPOIIds
                 )
                 .id(mapID) // 当 mapID 变化时，强制重建整个地图视图
                 .ignoresSafeArea()
@@ -286,6 +297,30 @@ struct MapTabView: View {
                     errorMessage: explorationManager.failureReason ?? "探索失败"
                 )
             }
+        }
+        .sheet(isPresented: $explorationManager.showPOIPopup) {
+            if let poi = explorationManager.currentPOI {
+                POIProximityPopup(
+                    poi: poi,
+                    onScavenge: {
+                        handleScavenge(poi: poi)
+                    },
+                    onDismiss: {
+                        explorationManager.showPOIPopup = false
+                    }
+                )
+                .presentationDetents([.height(350)])
+                .presentationDragIndicator(.visible)
+            }
+        }
+        .sheet(isPresented: $showScavengeResult) {
+            ScavengeResultView(
+                poiName: scavengedPOIName,
+                items: scavengedItems,
+                onConfirm: {
+                    showScavengeResult = false
+                }
+            )
         }
     }
 
@@ -849,6 +884,38 @@ struct MapTabView: View {
         print("   📱 显示探索结果界面")
         showExplorationResult = true
         print("🏁 ========== 结束处理完成 ==========\n")
+    }
+
+    /// 处理 POI 搜刮
+    private func handleScavenge(poi: POI) {
+        print("\n🎒 ========== 开始搜刮 POI ==========")
+        print("   📍 地点: \(poi.name)")
+
+        // 1. 生成物品
+        let items = explorationManager.scavengePOI(poi)
+        scavengedItems = items
+        scavengedPOIName = poi.name
+        print("   🎁 生成了 \(items.count) 件物品")
+
+        // 2. 关闭接近弹窗
+        explorationManager.showPOIPopup = false
+
+        // 3. 添加到背包
+        Task {
+            do {
+                try await inventoryManager.addItems(items)
+                print("   ✅ 物品已添加到背包")
+
+                // 4. 显示结果
+                await MainActor.run {
+                    showScavengeResult = true
+                }
+            } catch {
+                print("   ❌ 添加物品失败: \(error)")
+            }
+        }
+
+        print("🎒 ========== 搜刮处理完成 ==========\n")
     }
 
     /// 保存探索记录到数据库

@@ -170,7 +170,10 @@ struct RewardGenerator {
     }
 
     /// 生成随机物品
-    private static func generateRandomItem(tier: RewardTier) -> RewardItem? {
+    /// 生成随机物品（POI 搜刮用）
+    /// - Parameter tier: 奖励等级
+    /// - Returns: 随机生成的物品，失败返回 nil
+    static func generateRandomItem(tier: RewardTier) -> RewardItem? {
         // 1. 掷骰子决定稀有度
         let rarityRoll = Double.random(in: 0...1)
         let rarityPool: [String]
