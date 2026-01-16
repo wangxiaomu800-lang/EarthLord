@@ -154,7 +154,8 @@ extension POIType {
         coordinate: CLLocationCoordinate2D(latitude: 39.9042, longitude: 116.4074),
         status: .discovered,
         lootItems: [],
-        description: "一家废弃的超市"
+        description: "一家废弃的超市",
+        dangerLevel: 3
     )
 
     POIProximityPopup(
