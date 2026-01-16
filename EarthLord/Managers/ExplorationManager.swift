@@ -437,7 +437,7 @@ class ExplorationManager: NSObject, ObservableObject {
             return RewardItem(
                 itemId: itemId,
                 quantity: 1,
-                quality: "pristine",
+                quality: nil,  // AI 物品不使用品质系统
                 metadata: [
                     "ai_generated": "true",
                     "ai_name": aiItem.name,

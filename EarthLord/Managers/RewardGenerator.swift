@@ -112,6 +112,7 @@ struct RewardItem {
     let itemId: String
     let quantity: Int
     let quality: Int?  // 品质（0-4）
+    let metadata: [String: String]?  // 元数据（用于存储 AI 生成的名称、故事等）
 }
 
 /// 奖励生成器
@@ -200,7 +201,7 @@ struct RewardGenerator {
         // 4. 确定品质（对于有品质的物品）
         let quality = shouldHaveQuality(itemId: itemId) ? generateRandomQuality() : nil
 
-        return RewardItem(itemId: itemId, quantity: quantity, quality: quality)
+        return RewardItem(itemId: itemId, quantity: quantity, quality: quality, metadata: nil)
     }
 
     /// 判断物品是否有品质

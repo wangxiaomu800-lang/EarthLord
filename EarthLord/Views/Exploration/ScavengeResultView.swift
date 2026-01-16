@@ -245,7 +245,7 @@ private struct ScavengeItemRow: View {
                             .foregroundColor(ApocalypseTheme.textPrimary)
 
                         // AI 稀有度标签
-                        if let aiRarity = item.metadata?["ai_rarity"] as? String {
+                        if let aiRarity = item.metadata?["ai_rarity"] {
                             RarityBadge(rarity: aiRarity)
                         }
                         // 品质标签（非 AI 物品）
@@ -261,7 +261,7 @@ private struct ScavengeItemRow: View {
                     }
 
                     // 物品类型说明
-                    if item.metadata?["ai_generated"] as? String != "true" {
+                    if item.metadata?["ai_generated"] != "true" {
                         Text(item.itemId)
                             .font(.caption)
                             .foregroundColor(ApocalypseTheme.textMuted)
@@ -286,7 +286,7 @@ private struct ScavengeItemRow: View {
             }
 
             // AI 故事（可展开）
-            if let aiStory = item.metadata?["ai_story"] as? String {
+            if let aiStory = item.metadata?["ai_story"] {
                 Button(action: {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         showStory.toggle()
@@ -328,7 +328,7 @@ private struct ScavengeItemRow: View {
     /// 获取物品名称（优先使用 AI 名称）
     private func itemName() -> String {
         // 如果有 AI 名称，优先使用
-        if let aiName = item.metadata?["ai_name"] as? String {
+        if let aiName = item.metadata?["ai_name"] {
             return aiName
         }
 
@@ -410,9 +410,9 @@ private struct RarityBadge: View {
 
 #Preview {
     let sampleItems: [RewardItem] = [
-        RewardItem(itemId: "item_water_bottle", quantity: 2, quality: nil),
-        RewardItem(itemId: "item_canned_food", quantity: 1, quality: 2),
-        RewardItem(itemId: "item_bandage", quantity: 3, quality: 3)
+        RewardItem(itemId: "item_water_bottle", quantity: 2, quality: nil, metadata: nil),
+        RewardItem(itemId: "item_canned_food", quantity: 1, quality: 2, metadata: nil),
+        RewardItem(itemId: "item_bandage", quantity: 3, quality: 3, metadata: nil)
     ]
 
     return ScavengeResultView(
