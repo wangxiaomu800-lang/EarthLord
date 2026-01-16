@@ -337,14 +337,14 @@ class ExplorationManager: NSObject, ObservableObject {
             let poi = pois[i]
             let region = CLCircularRegion(
                 center: poi.coordinate,
-                radius: 50.0,  // 50 米半径
+                radius: 1000.0,  // 1000 米半径（1公里）
                 identifier: "poi_\(poi.id)"
             )
             region.notifyOnEntry = true
             region.notifyOnExit = false
 
             locationManager.startMonitoring(for: region)
-            print("   [\(i + 1)/\(limit)] 📍 \(poi.name) - 半径 50m")
+            print("   [\(i + 1)/\(limit)] 📍 \(poi.name) - 半径 1000m")
         }
 
         print("📍 ========== 地理围栏设置完成 ==========\n")
