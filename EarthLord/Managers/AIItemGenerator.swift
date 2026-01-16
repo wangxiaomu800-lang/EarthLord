@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Supabase
 
 @MainActor
 final class AIItemGenerator {
