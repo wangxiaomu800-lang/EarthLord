@@ -348,6 +348,34 @@ class ExplorationManager: NSObject, ObservableObject {
         }
 
         print("📍 ========== 地理围栏设置完成 ==========\n")
+
+        // ⚠️ iOS 地理围栏限制：如果用户已经在围栏内，不会触发进入事件
+        // 解决方案：主动检查用户是否已经在某个 POI 范围内
+        checkUserLocationInPOIs(pois: pois)
+    }
+
+    /// 检查用户是否已经在某个 POI 范围内
+    private func checkUserLocationInPOIs(pois: [POI]) {
+        guard let userLocation = LocationManager.shared.userLocation else {
+            return
+        }
+
+        print("\n🔍 检查用户是否已在 POI 范围内...")
+
+        for poi in pois {
+            let userCLLocation = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
+            let poiLocation = CLLocation(latitude: poi.coordinate.latitude, longitude: poi.coordinate.longitude)
+            let distance = userCLLocation.distance(from: poiLocation)
+
+            // 如果在 1000 米范围内，且未搜刮
+            if distance <= 1000.0 && !scavengedPOIIds.contains(poi.id) {
+                print("   ✅ 用户已在 \(poi.name) 范围内（\(Int(distance))米）")
+                // 主动触发 POI 进入事件
+                handlePOIEntry(identifier: "poi_\(poi.id)")
+                // 只触发最近的一个
+                break
+            }
+        }
     }
 
     /// 处理进入 POI 范围
