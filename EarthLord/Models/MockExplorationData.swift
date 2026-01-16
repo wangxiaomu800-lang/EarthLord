@@ -58,6 +58,7 @@ struct POI: Identifiable {
     let status: POIStatus
     let lootItems: [LootItem]?  // 可搜刮的物品（仅当 status == .discovered 时有效）
     let description: String?
+    let dangerLevel: Int  // 危险等级 1-5（影响物品稀有度分布）
 
     /// 是否可以搜刮
     var canLoot: Bool {
@@ -350,7 +351,8 @@ struct MockExplorationData {
                 LootItem(id: "loot_001", itemId: "item_water_bottle", quantity: 5, probability: 0.8),
                 LootItem(id: "loot_002", itemId: "item_canned_food", quantity: 3, probability: 0.6),
             ],
-            description: "一家废弃的小型超市，货架上还残留着一些物资。"
+            description: "一家废弃的小型超市，货架上还残留着一些物资。",
+            dangerLevel: 3
         ),
 
         // 2. 医院废墟：已发现，已被搜空
@@ -361,7 +363,8 @@ struct MockExplorationData {
             coordinate: CLLocationCoordinate2D(latitude: 39.9142, longitude: 116.4174),
             status: .looted,
             lootItems: nil,  // 已被搜空，没有物品
-            description: "一座废弃的医院，已经被其他幸存者搜刮过了。"
+            description: "一座废弃的医院，已经被其他幸存者搜刮过了。",
+            dangerLevel: 4
         ),
 
         // 3. 加油站：未发现
@@ -375,7 +378,8 @@ struct MockExplorationData {
                 LootItem(id: "loot_003", itemId: "item_rope", quantity: 1, probability: 0.5),
                 LootItem(id: "loot_004", itemId: "item_flashlight", quantity: 1, probability: 0.3),
             ],
-            description: nil  // 未发现时不显示描述
+            description: nil,  // 未发现时不显示描述
+            dangerLevel: 2
         ),
 
         // 4. 药店废墟：已发现，有物资
@@ -389,7 +393,8 @@ struct MockExplorationData {
                 LootItem(id: "loot_005", itemId: "item_bandage", quantity: 8, probability: 0.9),
                 LootItem(id: "loot_006", itemId: "item_medicine", quantity: 4, probability: 0.5),
             ],
-            description: "一家小型药店的废墟，柜台后面可能还有药品。"
+            description: "一家小型药店的废墟，柜台后面可能还有药品。",
+            dangerLevel: 3
         ),
 
         // 5. 工厂废墟：未发现
@@ -403,7 +408,8 @@ struct MockExplorationData {
                 LootItem(id: "loot_007", itemId: "item_scrap_metal", quantity: 10, probability: 0.8),
                 LootItem(id: "loot_008", itemId: "item_wood", quantity: 8, probability: 0.7),
             ],
-            description: nil  // 未发现时不显示描述
+            description: nil,  // 未发现时不显示描述
+            dangerLevel: 2
         ),
     ]
 

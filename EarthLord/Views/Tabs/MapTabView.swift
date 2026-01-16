@@ -886,36 +886,35 @@ struct MapTabView: View {
         print("🏁 ========== 结束处理完成 ==========\n")
     }
 
-    /// 处理 POI 搜刮
+    /// 处理 POI 搜刮（异步版本）
     private func handleScavenge(poi: POI) {
         print("\n🎒 ========== 开始搜刮 POI ==========")
         print("   📍 地点: \(poi.name)")
 
-        // 1. 生成物品
-        let items = explorationManager.scavengePOI(poi)
-        scavengedItems = items
-        scavengedPOIName = poi.name
-        print("   🎁 生成了 \(items.count) 件物品")
-
-        // 2. 关闭接近弹窗
+        // 关闭接近弹窗
         explorationManager.showPOIPopup = false
 
-        // 3. 添加到背包
+        // 异步生成物品并添加到背包
         Task {
+            // 1. 调用 AI 生成物品（异步）
+            let items = await explorationManager.scavengePOI(poi)
+            scavengedItems = items
+            scavengedPOIName = poi.name
+            print("   🎁 生成了 \(items.count) 件物品")
+
+            // 2. 添加到背包
             do {
                 try await inventoryManager.addItems(items)
                 print("   ✅ 物品已添加到背包")
 
-                // 4. 显示结果
-                await MainActor.run {
-                    showScavengeResult = true
-                }
+                // 3. 显示结果
+                showScavengeResult = true
             } catch {
                 print("   ❌ 添加物品失败: \(error)")
             }
-        }
 
-        print("🎒 ========== 搜刮处理完成 ==========\n")
+            print("🎒 ========== 搜刮处理完成 ==========\n")
+        }
     }
 
     /// 保存探索记录到数据库

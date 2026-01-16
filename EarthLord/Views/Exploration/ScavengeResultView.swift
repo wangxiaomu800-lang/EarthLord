@@ -219,60 +219,100 @@ private struct ScavengeItemRow: View {
     let delay: Double
     let showItems: Bool
 
+    @State private var showStory = false
+
     var body: some View {
-        HStack(spacing: 12) {
-            // 物品图标
-            ZStack {
-                Circle()
-                    .fill(categoryColor().opacity(0.2))
-                    .frame(width: 44, height: 44)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                // 物品图标
+                ZStack {
+                    Circle()
+                        .fill(categoryColor().opacity(0.2))
+                        .frame(width: 44, height: 44)
 
-                Image(systemName: categoryIcon())
-                    .font(.title3)
-                    .foregroundColor(categoryColor())
-            }
+                    Image(systemName: categoryIcon())
+                        .font(.title3)
+                        .foregroundColor(categoryColor())
+                }
 
-            // 物品信息
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text(itemName())
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(ApocalypseTheme.textPrimary)
+                // 物品信息
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        // 如果有 AI 名称，显示 AI 名称；否则显示默认名称
+                        Text(itemName())
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundColor(ApocalypseTheme.textPrimary)
 
-                    // 品质标签
-                    if let quality = item.quality, let qualityEnum = ItemQuality(rawValue: quality) {
-                        Text(qualityEnum.displayName)
-                            .font(.system(size: 10))
-                            .foregroundColor(qualityColor(qualityEnum))
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 2)
-                            .background(qualityColor(qualityEnum).opacity(0.15))
-                            .cornerRadius(4)
+                        // AI 稀有度标签
+                        if let aiRarity = item.metadata?["ai_rarity"] as? String {
+                            RarityBadge(rarity: aiRarity)
+                        }
+                        // 品质标签（非 AI 物品）
+                        else if let quality = item.quality, let qualityEnum = ItemQuality(rawValue: quality) {
+                            Text(qualityEnum.displayName)
+                                .font(.system(size: 10))
+                                .foregroundColor(qualityColor(qualityEnum))
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 2)
+                                .background(qualityColor(qualityEnum).opacity(0.15))
+                                .cornerRadius(4)
+                        }
+                    }
+
+                    // 物品类型说明
+                    if item.metadata?["ai_generated"] as? String != "true" {
+                        Text(item.itemId)
+                            .font(.caption)
+                            .foregroundColor(ApocalypseTheme.textMuted)
                     }
                 }
 
-                // 物品 ID（作为临时显示）
-                Text(item.itemId)
-                    .font(.caption)
-                    .foregroundColor(ApocalypseTheme.textMuted)
+                Spacer()
+
+                // 数量
+                Text("x\(item.quantity)")
+                    .font(.headline)
+                    .foregroundColor(ApocalypseTheme.warning)
+
+                // 对勾（带弹跳效果）
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(ApocalypseTheme.success)
+                    .scaleEffect(showItems ? 1.0 : 0.3)
+                    .animation(
+                        .spring(response: 0.4, dampingFraction: 0.5).delay(delay + 0.2),
+                        value: showItems
+                    )
             }
 
-            Spacer()
+            // AI 故事（可展开）
+            if let aiStory = item.metadata?["ai_story"] as? String {
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        showStory.toggle()
+                    }
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "book.fill")
+                            .font(.caption)
+                            .foregroundColor(ApocalypseTheme.accentOrange)
 
-            // 数量
-            Text("x\(item.quantity)")
-                .font(.headline)
-                .foregroundColor(ApocalypseTheme.warning)
+                        Text(showStory ? aiStory : "\(aiStory.prefix(40))...")
+                            .font(.caption)
+                            .foregroundColor(ApocalypseTheme.textSecondary)
+                            .lineLimit(showStory ? nil : 2)
+                            .multilineTextAlignment(.leading)
 
-            // 对勾（带弹跳效果）
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(ApocalypseTheme.success)
-                .scaleEffect(showItems ? 1.0 : 0.3)
-                .animation(
-                    .spring(response: 0.4, dampingFraction: 0.5).delay(delay + 0.2),
-                    value: showItems
-                )
+                        Spacer()
+
+                        Image(systemName: showStory ? "chevron.up" : "chevron.down")
+                            .font(.caption2)
+                            .foregroundColor(ApocalypseTheme.accentOrange)
+                    }
+                    .padding(.top, 4)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
@@ -285,8 +325,14 @@ private struct ScavengeItemRow: View {
 
     // MARK: - 辅助方法
 
-    /// 获取物品名称
+    /// 获取物品名称（优先使用 AI 名称）
     private func itemName() -> String {
+        // 如果有 AI 名称，优先使用
+        if let aiName = item.metadata?["ai_name"] as? String {
+            return aiName
+        }
+
+        // 否则使用默认物品定义中的名称
         if let definition = MockExplorationData.findItemDefinition(by: item.itemId) {
             return definition.name
         }
@@ -318,6 +364,45 @@ private struct ScavengeItemRow: View {
         case .good: return ApocalypseTheme.success
         case .excellent: return ApocalypseTheme.info
         }
+    }
+}
+
+// MARK: - 稀有度标签
+
+/// 稀有度标签组件
+private struct RarityBadge: View {
+    let rarity: String
+
+    var rarityColor: Color {
+        switch rarity.lowercased() {
+        case "common": return .gray
+        case "uncommon": return .green
+        case "rare": return .blue
+        case "epic": return .purple
+        case "legendary": return .orange
+        default: return .gray
+        }
+    }
+
+    var rarityText: String {
+        switch rarity.lowercased() {
+        case "common": return "普通"
+        case "uncommon": return "优秀"
+        case "rare": return "稀有"
+        case "epic": return "史诗"
+        case "legendary": return "传奇"
+        default: return rarity
+        }
+    }
+
+    var body: some View {
+        Text(rarityText)
+            .font(.system(size: 10, weight: .semibold))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(rarityColor.opacity(0.2))
+            .foregroundColor(rarityColor)
+            .cornerRadius(4)
     }
 }
 

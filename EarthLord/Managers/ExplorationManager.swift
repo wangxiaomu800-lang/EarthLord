@@ -385,14 +385,27 @@ class ExplorationManager: NSObject, ObservableObject {
         print("🎯 ====================================\n")
     }
 
-    /// 搜刮 POI
-    func scavengePOI(_ poi: POI) -> [RewardItem] {
+    /// 搜刮 POI（异步版本，集成 AI 生成）
+    func scavengePOI(_ poi: POI) async -> [RewardItem] {
         print("\n🎁 ========== 搜刮 POI ==========")
         print("   📍 地点: \(poi.name)")
+        print("   🎲 危险值: \(poi.dangerLevel)")
 
         // 标记为已搜刮
         scavengedPOIIds.insert(poi.id)
         print("   ✅ 标记为已搜刮")
+
+        // 1. 尝试 AI 生成
+        if let aiItems = await AIItemGenerator.shared.generateItems(for: poi, count: 3) {
+            // AI 生成成功，转换为 RewardItem
+            let items = convertAIItemsToRewardItems(aiItems)
+            print("   ✅ AI 生成成功: \(items.count) 件物品")
+            print("🎁 ========== 搜刮完成 ==========\n")
+            return items
+        }
+
+        // 2. AI 失败，使用降级方案（预设物品）
+        print("   ⚠️ AI 生成失败，使用预设物品")
 
         // 生成 1-3 件物品（使用铜级奖励池）
         let itemCount = Int.random(in: 1...3)
@@ -409,10 +422,51 @@ class ExplorationManager: NSObject, ObservableObject {
             }
         }
 
-        print("   ✅ 生成了 \(items.count) 件物品")
+        print("   ✅ 降级方案: 生成了 \(items.count) 件物品")
         print("🎁 ========== 搜刮完成 ==========\n")
 
         return items
+    }
+
+    /// 将 AI 生成的物品转换为 RewardItem
+    private func convertAIItemsToRewardItems(_ aiItems: [AIGeneratedItem]) -> [RewardItem] {
+        return aiItems.map { aiItem in
+            // 根据 AI 稀有度和分类选择对应的物品 ID
+            let itemId = selectItemIdByRarity(aiItem.rarity, category: aiItem.category)
+
+            return RewardItem(
+                itemId: itemId,
+                quantity: 1,
+                quality: "pristine",
+                metadata: [
+                    "ai_generated": "true",
+                    "ai_name": aiItem.name,
+                    "ai_story": aiItem.story,
+                    "ai_rarity": aiItem.rarity
+                ]
+            )
+        }
+    }
+
+    /// 根据稀有度和分类选择对应的游戏内物品 ID
+    private func selectItemIdByRarity(_ rarity: String, category: String) -> String {
+        // 根据分类和稀有度映射到现有物品系统
+        switch (category, rarity.lowercased()) {
+        case ("医疗", "legendary"), ("医疗", "epic"):
+            return "medical_kit_advanced"
+        case ("医疗", _):
+            return "medical_bandage"
+        case ("食物", "legendary"), ("食物", "epic"):
+            return "food_canned_premium"
+        case ("食物", _):
+            return "food_water"
+        case ("工具", _):
+            return "tool_flashlight"
+        case ("武器", _):
+            return "weapon_baton"
+        default:
+            return "material_scrap"
+        }
     }
 
     /// 清除所有 POI 和地理围栏

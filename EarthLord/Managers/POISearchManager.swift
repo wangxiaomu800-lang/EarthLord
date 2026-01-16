@@ -143,8 +143,8 @@ class POISearchManager {
             return nil
         }
 
-        // 根据 POI 类别映射类型
-        let poiType = mapPOIType(mapItem: mapItem)
+        // 根据 POI 类别映射类型和危险值
+        let (poiType, dangerLevel) = determinePOITypeAndDanger(mapItem: mapItem)
 
         // 生成唯一 ID
         let id = UUID().uuidString
@@ -157,49 +157,58 @@ class POISearchManager {
             coordinate: mapItem.placemark.coordinate,
             status: .discovered,  // 新搜索到的 POI 都是已发现状态
             lootItems: [],  // 物品在搜刮时生成，这里先为空
-            description: nil
+            description: nil,
+            dangerLevel: dangerLevel
         )
     }
 
-    /// 映射 POI 类型
-    private static func mapPOIType(mapItem: MKMapItem) -> POIType {
+    /// 映射 POI 类型和危险值
+    /// - Returns: (POIType, 危险值 1-5)
+    private static func determinePOITypeAndDanger(mapItem: MKMapItem) -> (POIType, Int) {
         // 获取 POI 类别
         let categories = mapItem.pointOfInterestCategory
+        let name = mapItem.name?.lowercased() ?? ""
 
-        // 根据类别映射到 POIType
+        // 根据类别映射到 POIType 和危险值
         if let category = categories {
             switch category {
-            case .store, .foodMarket:
-                return .supermarket
             case .hospital:
-                return .hospital
-            case .gasStation, .evCharger:
-                return .gasStation
+                return (.hospital, 4)  // 医院高危
             case .pharmacy:
-                return .pharmacy
+                return (.pharmacy, 3)  // 药店中危
+            case .store, .foodMarket:
+                // 根据名称细分超市危险值
+                if name.contains("便利") || name.contains("convenience") {
+                    return (.supermarket, 2)  // 便利店低危
+                }
+                return (.supermarket, 3)  // 大型超市中危
+            case .gasStation, .evCharger:
+                return (.gasStation, 2)  // 加油站低危
             case .restaurant, .cafe, .bakery:
-                return .factory  // 暂时映射到 factory，后续可以扩展 POIType
+                return (.factory, 2)  // 餐厅/咖啡店暂时映射到 factory，低危
             default:
                 break
             }
         }
 
         // 根据名称关键字匹配
-        let name = mapItem.name?.lowercased() ?? ""
-
-        if name.contains("超市") || name.contains("market") || name.contains("商店") {
-            return .supermarket
-        } else if name.contains("医院") || name.contains("hospital") || name.contains("诊所") {
-            return .hospital
-        } else if name.contains("加油") || name.contains("gas") || name.contains("油站") {
-            return .gasStation
+        if name.contains("医院") || name.contains("hospital") || name.contains("诊所") {
+            return (.hospital, 4)  // 医院高危
+        } else if name.contains("警察") || name.contains("police") || name.contains("公安") {
+            return (.hospital, 4)  // 警察局高危（暂时映射到 hospital 类型）
         } else if name.contains("药店") || name.contains("药房") || name.contains("pharmacy") {
-            return .pharmacy
+            return (.pharmacy, 3)  // 药店中危
+        } else if name.contains("便利") || name.contains("convenience") {
+            return (.supermarket, 2)  // 便利店低危
+        } else if name.contains("超市") || name.contains("market") || name.contains("商场") || name.contains("商店") {
+            return (.supermarket, 3)  // 超市/商场中危
+        } else if name.contains("加油") || name.contains("gas") || name.contains("油站") {
+            return (.gasStation, 2)  // 加油站低危
         } else if name.contains("餐厅") || name.contains("restaurant") || name.contains("咖啡") || name.contains("cafe") {
-            return .factory  // 暂时映射到 factory
+            return (.factory, 2)  // 餐厅/咖啡店低危
         }
 
-        // 默认返回超市
-        return .supermarket
+        // 默认返回超市，低危
+        return (.supermarket, 2)
     }
 }
