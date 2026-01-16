@@ -157,7 +157,7 @@ extension POIType {
         description: "一家废弃的超市"
     )
 
-    return POIProximityPopup(
+    POIProximityPopup(
         poi: samplePOI,
         onScavenge: {
             print("搜刮")
