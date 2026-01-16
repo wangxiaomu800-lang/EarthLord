@@ -295,7 +295,7 @@ private struct ScavengeItemRow: View {
                     HStack(spacing: 8) {
                         Image(systemName: "book.fill")
                             .font(.caption)
-                            .foregroundColor(ApocalypseTheme.accentOrange)
+                            .foregroundColor(ApocalypseTheme.primary)
 
                         Text(showStory ? aiStory : "\(aiStory.prefix(40))...")
                             .font(.caption)
@@ -307,7 +307,7 @@ private struct ScavengeItemRow: View {
 
                         Image(systemName: showStory ? "chevron.up" : "chevron.down")
                             .font(.caption2)
-                            .foregroundColor(ApocalypseTheme.accentOrange)
+                            .foregroundColor(ApocalypseTheme.primary)
                     }
                     .padding(.top, 4)
                 }
