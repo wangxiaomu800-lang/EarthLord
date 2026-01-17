@@ -56,20 +56,20 @@ struct TerritoryDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") {
+                    Button("common.done") {
                         dismiss()
                     }
                 }
             }
-            .alert("确认删除", isPresented: $showingDeleteConfirmation) {
-                Button("取消", role: .cancel) { }
-                Button("删除", role: .destructive) {
+            .alert("territory.confirm_delete", isPresented: $showingDeleteConfirmation) {
+                Button("common.cancel", role: .cancel) { }
+                Button("territory.delete", role: .destructive) {
                     Task {
                         await deleteTerritoryAction()
                     }
                 }
             } message: {
-                Text("确定要删除这个领地吗？此操作无法撤销。")
+                Text("territory.delete_warning")
             }
         }
     }
@@ -129,16 +129,16 @@ struct TerritoryDetailView: View {
                 .font(.largeTitle)
                 .foregroundColor(.secondary)
 
-            Text("更多功能")
+            Text("territory.more_features")
                 .font(.headline)
                 .foregroundColor(.primary)
 
-            Text("重命名、建筑系统、领地交易等功能")
+            Text("territory.features_description")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
 
-            Text("敬请期待")
+            Text("territory.coming_soon")
                 .font(.caption)
                 .foregroundColor(.orange)
                 .padding(.top, 4)
@@ -161,7 +161,7 @@ struct TerritoryDetailView: View {
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                 } else {
                     Image(systemName: "trash.fill")
-                    Text("删除领地")
+                    Text("territory.delete_territory")
                 }
             }
             .frame(maxWidth: .infinity)
@@ -196,7 +196,7 @@ struct TerritoryDetailView: View {
             fallbackFormatter.timeZone = TimeZone(secondsFromGMT: 0)
 
             guard let fallbackDate = fallbackFormatter.date(from: dateString) else {
-                return "未知时间"
+                return String(localized: "territory.unknown_time")
             }
 
             let displayFormatter = DateFormatter()

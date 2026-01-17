@@ -28,7 +28,7 @@ struct POIProximityPopup: View {
                     .padding(.top, 24)
 
                 // 标题
-                Text("发现可搜刮地点")
+                Text("poi.proximity.title")
                     .font(.headline)
                     .foregroundColor(ApocalypseTheme.textPrimary)
 
@@ -62,7 +62,7 @@ struct POIProximityPopup: View {
                 Button(action: {
                     onDismiss()
                 }) {
-                    Text("稍后再说")
+                    Text("poi.proximity.later")
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundColor(ApocalypseTheme.textSecondary)
@@ -79,7 +79,7 @@ struct POIProximityPopup: View {
                     HStack(spacing: 8) {
                         Image(systemName: "bag.fill")
                             .font(.body)
-                        Text("立即搜刮")
+                        Text("poi.proximity.scavenge_now")
                             .font(.body)
                             .fontWeight(.bold)
                     }

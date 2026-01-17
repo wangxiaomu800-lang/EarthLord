@@ -120,7 +120,7 @@ struct BackpackView: View {
                     .padding(.top, 12)
             }
         }
-        .navigationTitle("背包")
+        .navigationTitle(NSLocalizedString("背包", comment: "Backpack"))
         .navigationBarTitleDisplayMode(.inline)
         .task {
             // 加载背包数据
@@ -142,7 +142,7 @@ struct BackpackView: View {
                 Image(systemName: "bag.fill")
                     .foregroundColor(ApocalypseTheme.primary)
 
-                Text("背包容量")
+                Text(NSLocalizedString("背包容量", comment: "Inventory Capacity"))
                     .font(.headline)
                     .foregroundColor(ApocalypseTheme.textPrimary)
 
@@ -190,7 +190,7 @@ struct BackpackView: View {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.caption)
 
-                    Text("背包快满了！")
+                    Text("backpack.almost_full")
                         .font(.caption)
                         .fontWeight(.medium)
                 }
@@ -208,7 +208,7 @@ struct BackpackView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(ApocalypseTheme.textMuted)
 
-            TextField("搜索物品...", text: $searchText)
+            TextField(NSLocalizedString("搜索物品...", comment: "Search items..."), text: $searchText)
                 .foregroundColor(ApocalypseTheme.textPrimary)
                 .autocorrectionDisabled()
 
@@ -312,12 +312,12 @@ struct BackpackView: View {
 
             // 提示文字
             if !searchText.isEmpty || selectedCategory != nil {
-                Text("尝试清除搜索或切换分类")
+                Text("backpack.try_clear_filter")
                     .font(.subheadline)
                     .foregroundColor(ApocalypseTheme.textMuted)
                     .multilineTextAlignment(.center)
             } else {
-                Text("去探索收集物资吧")
+                Text("backpack.go_explore")
                     .font(.subheadline)
                     .foregroundColor(ApocalypseTheme.textMuted)
                     .multilineTextAlignment(.center)
@@ -456,7 +456,7 @@ private struct ItemCard: View {
             VStack(spacing: 8) {
                 // 使用按钮
                 Button(action: { handleUse() }) {
-                    Text("使用")
+                    Text(NSLocalizedString("使用", comment: "Use"))
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(.white)
@@ -468,7 +468,7 @@ private struct ItemCard: View {
 
                 // 存储按钮
                 Button(action: { handleStore() }) {
-                    Text("存储")
+                    Text("backpack.store")
                         .font(.caption)
                         .fontWeight(.medium)
                         .foregroundColor(ApocalypseTheme.textSecondary)

@@ -9,35 +9,35 @@ struct MainTabView: View {
             MapTabView()
                 .tabItem {
                     Image(systemName: "map.fill")
-                    Text("地图")
+                    Text("tab.map")
                 }
                 .tag(0)
 
             TerritoryTabView()
                 .tabItem {
                     Image(systemName: "flag.fill")
-                    Text("领地")
+                    Text("tab.territory")
                 }
                 .tag(1)
 
             ResourcesTabView()
                 .tabItem {
                     Image(systemName: "cube.box.fill")
-                    Text("资源")
+                    Text("tab.resources")
                 }
                 .tag(2)
 
             ProfileTabView()
                 .tabItem {
                     Image(systemName: "person.fill")
-                    Text("个人")
+                    Text("tab.profile")
                 }
                 .tag(3)
 
             MoreTabView()
                 .tabItem {
                     Image(systemName: "ellipsis")
-                    Text("更多")
+                    Text("tab.more")
                 }
                 .tag(4)
         }

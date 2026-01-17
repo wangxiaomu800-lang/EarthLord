@@ -11,15 +11,23 @@ import SwiftUI
 struct ResourcesTabView: View {
     // MARK: - 分段枚举
 
-    enum ResourceSection: String, CaseIterable {
-        case poi = "POI"
-        case backpack = "背包"
-        case purchased = "已购"
-        case territory = "领地"
-        case trade = "交易"
+    enum ResourceSection: String, CaseIterable, Identifiable {
+        case poi
+        case backpack
+        case purchased
+        case territory
+        case trade
 
-        var displayName: String {
-            return self.rawValue
+        var id: String { self.rawValue }
+
+        var displayName: LocalizedStringKey {
+            switch self {
+            case .poi: return "resources.section.poi"
+            case .backpack: return "resources.section.backpack"
+            case .purchased: return "resources.section.purchased"
+            case .territory: return "resources.section.territory"
+            case .trade: return "resources.section.trade"
+            }
         }
     }
 
@@ -52,7 +60,7 @@ struct ResourcesTabView: View {
                 contentView
             }
             .background(ApocalypseTheme.background)
-            .navigationTitle("资源")
+            .navigationTitle("tab.resources")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(ApocalypseTheme.cardBackground, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
@@ -71,7 +79,7 @@ struct ResourcesTabView: View {
                     .foregroundColor(isTradingEnabled ? ApocalypseTheme.success : ApocalypseTheme.textMuted)
                     .font(.title3)
 
-                Text("交易")
+                Text("resources.trading")
                     .font(.subheadline)
                     .foregroundColor(ApocalypseTheme.textSecondary)
 
@@ -89,7 +97,7 @@ struct ResourcesTabView: View {
                         .fill(ApocalypseTheme.success)
                         .frame(width: 8, height: 8)
 
-                    Text("开启中")
+                    Text("resources.trading_on")
                         .font(.caption)
                         .foregroundColor(ApocalypseTheme.success)
                 }
@@ -103,8 +111,8 @@ struct ResourcesTabView: View {
 
     /// 分段选择器
     private var segmentedPicker: some View {
-        Picker("资源分段", selection: $selectedSection) {
-            ForEach(ResourceSection.allCases, id: \.self) { section in
+        Picker("resources.segments", selection: $selectedSection) {
+            ForEach(ResourceSection.allCases) { section in
                 Text(section.displayName)
                     .tag(section)
             }
@@ -125,22 +133,22 @@ struct ResourcesTabView: View {
         case .purchased:
             placeholderView(
                 icon: "bag.badge.checkmark",
-                title: "已购物品",
-                message: "功能开发中"
+                title: String(localized: "resources.purchased_items"),
+                message: String(localized: "resources.under_development")
             )
 
         case .territory:
             placeholderView(
                 icon: "map",
-                title: "领地资源",
-                message: "功能开发中"
+                title: String(localized: "resources.territory_resources"),
+                message: String(localized: "resources.under_development")
             )
 
         case .trade:
             placeholderView(
                 icon: "arrow.left.arrow.right",
-                title: "资源交易",
-                message: "功能开发中"
+                title: String(localized: "resources.trading_exchange"),
+                message: String(localized: "resources.under_development")
             )
         }
     }

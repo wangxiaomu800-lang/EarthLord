@@ -38,7 +38,7 @@ struct ProfileTabView: View {
                 ScrollView {
                     VStack(spacing: 24) {
                         // 标题
-                        Text("幸存者档案")
+                        Text("profile.title")
                             .font(.title2)
                             .fontWeight(.semibold)
                             .foregroundColor(ApocalypseTheme.textPrimary)
@@ -79,12 +79,12 @@ struct ProfileTabView: View {
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                 .scaleEffect(1.5)
 
-                            Text(isSigningOut ? "正在退出登录..." : "正在删除账户...")
+                            Text(isSigningOut ? "profile.signing_out" : "profile.deleting_account")
                                 .foregroundColor(.white)
                                 .font(.headline)
 
                             if isDeletingAccount {
-                                Text("请稍候，这可能需要几秒钟")
+                                Text("profile.please_wait")
                                     .foregroundColor(.white.opacity(0.8))
                                     .font(.subheadline)
                             }
@@ -95,13 +95,13 @@ struct ProfileTabView: View {
                     }
                 }
             }
-            .alert("确认退出", isPresented: $showSignOutAlert) {
-                Button("取消", role: .cancel) { }
-                Button("退出登录", role: .destructive) {
+            .alert("profile.confirm_sign_out", isPresented: $showSignOutAlert) {
+                Button("common.cancel", role: .cancel) { }
+                Button("profile.sign_out", role: .destructive) {
                     handleSignOut()
                 }
             } message: {
-                Text("确定要退出登录吗？")
+                Text("profile.sign_out_message")
             }
             .sheet(isPresented: $showDeleteAccountAlert) {
                 DeleteAccountConfirmationView(
@@ -110,12 +110,12 @@ struct ProfileTabView: View {
                     onConfirm: handleDeleteAccount
                 )
             }
-            .alert("删除失败", isPresented: $showDeleteAccountError) {
-                Button("确定", role: .cancel) {
+            .alert("profile.delete_failed", isPresented: $showDeleteAccountError) {
+                Button("common.ok", role: .cancel) {
                     deleteAccountError = nil
                 }
             } message: {
-                Text(deleteAccountError ?? "未知错误")
+                Text(deleteAccountError ?? "")
             }
         }
     }
@@ -163,7 +163,7 @@ struct ProfileTabView: View {
             StatItem(
                 icon: "flag.fill",
                 value: "\(locationManager.territoryCount)",
-                label: "领地"
+                label: "profile.stats.territories"
             )
 
             Divider()
@@ -174,7 +174,7 @@ struct ProfileTabView: View {
             StatItem(
                 icon: "info.circle.fill",
                 value: "0",
-                label: "资源点"
+                label: "profile.stats.resources"
             )
 
             Divider()
@@ -185,7 +185,7 @@ struct ProfileTabView: View {
             StatItem(
                 icon: "figure.walk",
                 value: "0",
-                label: "探索距离"
+                label: "profile.stats.distance"
             )
         }
         .padding(.vertical, 20)
@@ -204,7 +204,7 @@ struct ProfileTabView: View {
                         .foregroundColor(.gray)
                         .frame(width: 24)
 
-                    Text("设置")
+                    Text("profile.menu.settings")
                         .font(.body)
                         .foregroundColor(ApocalypseTheme.textPrimary)
 
@@ -225,7 +225,7 @@ struct ProfileTabView: View {
             MenuOptionRow(
                 icon: "bell.fill",
                 iconColor: ApocalypseTheme.primary,
-                title: "通知",
+                title: "profile.menu.notifications",
                 action: {}
             )
 
@@ -236,7 +236,7 @@ struct ProfileTabView: View {
             MenuOptionRow(
                 icon: "questionmark.circle.fill",
                 iconColor: .blue,
-                title: "帮助",
+                title: "profile.menu.help",
                 action: {}
             )
 
@@ -247,7 +247,7 @@ struct ProfileTabView: View {
             MenuOptionRow(
                 icon: "info.circle.fill",
                 iconColor: .green,
-                title: "关于",
+                title: "profile.menu.about",
                 action: {}
             )
         }
@@ -264,7 +264,7 @@ struct ProfileTabView: View {
                 Image(systemName: "rectangle.portrait.and.arrow.right")
                     .font(.headline)
 
-                Text("退出登录")
+                Text("profile.sign_out")
                     .font(.headline)
                     .fontWeight(.semibold)
             }
@@ -312,7 +312,7 @@ struct ProfileTabView: View {
                 Image(systemName: "trash.fill")
                     .font(.headline)
 
-                Text("删除账户")
+                Text("profile.delete_account")
                     .font(.headline)
                     .fontWeight(.semibold)
             }
@@ -333,7 +333,7 @@ struct ProfileTabView: View {
     private func handleDeleteAccount() {
         print("⚠️ 用户确认删除账户，输入文本: \(deleteAccountConfirmationText)")
 
-        guard deleteAccountConfirmationText == "删除" else {
+        guard deleteAccountConfirmationText == String(localized: "profile.delete_keyword") else {
             print("❌ 确认文本不匹配")
             return
         }
@@ -370,7 +370,7 @@ struct ProfileTabView: View {
 
     /// 从邮箱中提取用户名（邮箱 @ 前面的部分）
     private func extractUsername(from email: String?) -> String {
-        guard let email = email else { return "未知用户" }
+        guard let email = email else { return String(localized: "profile.unknown_user") }
         if let atIndex = email.firstIndex(of: "@") {
             return String(email[..<atIndex])
         }
@@ -453,26 +453,26 @@ struct DeleteAccountConfirmationView: View {
                     .padding(.top, 40)
 
                 // 标题
-                Text("删除账户")
+                Text("profile.delete_account")
                     .font(.title)
                     .fontWeight(.bold)
                     .foregroundColor(ApocalypseTheme.textPrimary)
 
                 // 警告信息
                 VStack(spacing: 12) {
-                    Text("此操作不可撤销！")
+                    Text("profile.delete_warning")
                         .font(.headline)
                         .foregroundColor(.red)
 
-                    Text("您的所有数据将被永久删除，包括：")
+                    Text("profile.delete_data_warning")
                         .font(.subheadline)
                         .foregroundColor(ApocalypseTheme.textSecondary)
 
                     VStack(alignment: .leading, spacing: 8) {
-                        DeleteInfoItem(text: "账户信息")
-                        DeleteInfoItem(text: "游戏进度")
-                        DeleteInfoItem(text: "领地数据")
-                        DeleteInfoItem(text: "所有资源")
+                        DeleteInfoItem(text: "profile.delete_item.account")
+                        DeleteInfoItem(text: "profile.delete_item.progress")
+                        DeleteInfoItem(text: "profile.delete_item.territories")
+                        DeleteInfoItem(text: "profile.delete_item.resources")
                     }
                     .padding(.vertical, 8)
                 }
@@ -480,18 +480,18 @@ struct DeleteAccountConfirmationView: View {
 
                 // 输入框
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("请输入\"删除\"以确认此操作")
+                    Text("profile.delete_confirmation_prompt")
                         .font(.caption)
                         .foregroundColor(ApocalypseTheme.textSecondary)
 
-                    TextField("删除", text: $confirmationText)
+                    TextField(String(localized: "profile.delete_keyword"), text: $confirmationText)
                         .padding()
                         .background(ApocalypseTheme.cardBackground)
                         .cornerRadius(8)
                         .overlay(
                             RoundedRectangle(cornerRadius: 8)
                                 .stroke(
-                                    confirmationText == "删除" ? Color.red : ApocalypseTheme.textMuted.opacity(0.3),
+                                    confirmationText == String(localized: "profile.delete_keyword") ? Color.red : ApocalypseTheme.textMuted.opacity(0.3),
                                     lineWidth: 1
                                 )
                         )
@@ -508,27 +508,27 @@ struct DeleteAccountConfirmationView: View {
                         onConfirm()
                         isPresented = false
                     }) {
-                        Text("确认删除")
+                        Text("profile.confirm_delete")
                             .font(.headline)
                             .fontWeight(.semibold)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .background(
-                                confirmationText == "删除"
+                                confirmationText == String(localized: "profile.delete_keyword")
                                     ? Color.red
                                     : Color.gray.opacity(0.3)
                             )
                             .foregroundColor(.white)
                             .cornerRadius(12)
                     }
-                    .disabled(confirmationText != "删除")
+                    .disabled(confirmationText != String(localized: "profile.delete_keyword"))
 
                     // 取消按钮
                     Button(action: {
                         confirmationText = ""
                         isPresented = false
                     }) {
-                        Text("取消")
+                        Text("common.cancel")
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)

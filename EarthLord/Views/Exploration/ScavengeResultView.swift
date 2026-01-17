@@ -95,7 +95,7 @@ struct ScavengeResultView: View {
 
             // 标题文字
             VStack(spacing: 8) {
-                Text("🎉 搜刮成功！")
+                Text(NSLocalizedString("🎉 搜刮成功！", comment: "🎉 Scavenged Successfully!"))
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(ApocalypseTheme.textPrimary)
 
@@ -120,13 +120,13 @@ struct ScavengeResultView: View {
                 Image(systemName: "gift.fill")
                     .foregroundColor(ApocalypseTheme.warning)
 
-                Text("获得物品")
+                Text(NSLocalizedString("获得物品", comment: "Items Obtained"))
                     .font(.headline)
                     .foregroundColor(ApocalypseTheme.textPrimary)
 
                 Spacer()
 
-                Text("\(items.count) 件")
+                Text(String(format: NSLocalizedString("%d 件", comment: "%d items"), items.count))
                     .font(.subheadline)
                     .foregroundColor(ApocalypseTheme.textSecondary)
             }
@@ -139,7 +139,7 @@ struct ScavengeResultView: View {
                         .font(.system(size: 50))
                         .foregroundColor(ApocalypseTheme.textMuted)
 
-                    Text("什么都没找到")
+                    Text(NSLocalizedString("什么都没找到", comment: "Nothing found"))
                         .font(.headline)
                         .foregroundColor(ApocalypseTheme.textSecondary)
                 }
@@ -164,7 +164,7 @@ struct ScavengeResultView: View {
                         .font(.caption)
                         .foregroundColor(ApocalypseTheme.success)
 
-                    Text("已添加到背包")
+                    Text(NSLocalizedString("已添加到背包", comment: "Added to inventory"))
                         .font(.caption)
                         .foregroundColor(ApocalypseTheme.success)
                 }
@@ -188,7 +188,7 @@ struct ScavengeResultView: View {
                 Image(systemName: "checkmark")
                     .font(.headline)
 
-                Text("确认收下")
+                Text(NSLocalizedString("确认收下", comment: "Confirm Receive"))
                     .font(.headline)
             }
             .frame(maxWidth: .infinity)

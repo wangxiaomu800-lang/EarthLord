@@ -223,7 +223,7 @@ struct POIDetailView: View {
                     .foregroundColor(ApocalypseTheme.textSecondary)
                     .frame(width: 24)
 
-                Text("危险等级")
+                Text("poi.danger_level")
                     .foregroundColor(ApocalypseTheme.textSecondary)
 
                 Spacer()
@@ -270,14 +270,14 @@ struct POIDetailView: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
 
-                        Text("搜寻中...")
+                        Text("poi.searching")
                             .font(.headline)
                             .foregroundColor(.white)
                     } else {
                         Image(systemName: "magnifyingglass")
                             .font(.title3)
 
-                        Text("搜寻此POI")
+                        Text("poi.search_poi")
                             .font(.headline)
                     }
                 }

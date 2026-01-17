@@ -279,13 +279,13 @@ struct MapTabView: View {
         .onChange(of: languageManager.currentLanguage) { oldValue, newValue in
             handleLanguageChange(from: oldValue, to: newValue)
         }
-        .alert("需要定位权限", isPresented: $showSettingsAlert) {
-            Button("取消", role: .cancel) { }
-            Button("前往设置") {
+        .alert("map.location_permission_needed", isPresented: $showSettingsAlert) {
+            Button("common.cancel", role: .cancel) { }
+            Button("map.go_to_settings") {
                 openSettings()
             }
         } message: {
-            Text("请在设置中开启定位权限，以便在地图上显示您的位置")
+            Text("map.location_permission_message")
         }
         .sheet(isPresented: $showExplorationResult) {
             if let result = explorationResult {
@@ -294,7 +294,7 @@ struct MapTabView: View {
                 // 显示探索失败
                 ExplorationResultView(
                     result: nil,
-                    errorMessage: explorationManager.failureReason ?? "探索失败"
+                    errorMessage: explorationManager.failureReason ?? String(localized: "map.exploration_failed")
                 )
             }
         }
@@ -344,7 +344,7 @@ struct MapTabView: View {
                         .foregroundColor(ApocalypseTheme.textPrimary)
                 }
             } else {
-                Text("定位中...")
+                Text("map.locating")
                     .font(.system(size: 13))
                     .foregroundColor(ApocalypseTheme.textSecondary)
             }
@@ -365,13 +365,13 @@ struct MapTabView: View {
                 .foregroundColor(ApocalypseTheme.primary)
 
             // 标题
-            Text("需要定位权限")
+            Text("map.location_permission_needed")
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(ApocalypseTheme.textPrimary)
 
             // 说明
-            Text("《地球新主》需要获取您的位置\n来显示您在末日世界中的坐标")
+            Text("map.location_permission_description")
                 .font(.body)
                 .foregroundColor(ApocalypseTheme.textSecondary)
                 .multilineTextAlignment(.center)
@@ -383,7 +383,7 @@ struct MapTabView: View {
             }) {
                 HStack(spacing: 12) {
                     Image(systemName: "location.fill")
-                    Text("授权定位")
+                    Text("map.authorize_location")
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: 200)
@@ -413,12 +413,12 @@ struct MapTabView: View {
                 .foregroundColor(ApocalypseTheme.warning)
 
             // 标题
-            Text("定位权限被拒绝")
+            Text("map.location_permission_denied")
                 .font(.headline)
                 .foregroundColor(ApocalypseTheme.textPrimary)
 
             // 说明
-            Text("请在设置中开启定位权限，\n以便在地图上显示您的位置")
+            Text("map.location_permission_message")
                 .font(.subheadline)
                 .foregroundColor(ApocalypseTheme.textSecondary)
                 .multilineTextAlignment(.center)
@@ -429,7 +429,7 @@ struct MapTabView: View {
             }) {
                 HStack(spacing: 8) {
                     Image(systemName: "gear")
-                    Text("前往设置")
+                    Text("map.go_to_settings")
                         .fontWeight(.semibold)
                 }
                 .padding(.horizontal, 24)
@@ -551,7 +551,7 @@ struct MapTabView: View {
                                 .font(.system(size: 11))
                         } else {
                             // 已达最高级，只显示距离
-                            Text("\(Int(explorationManager.currentDistance))m 钻石")
+                            Text("\(Int(explorationManager.currentDistance))m " + String(localized: "map.diamond_tier"))
                                 .font(.system(size: 11))
                         }
                     }
@@ -672,11 +672,11 @@ struct MapTabView: View {
                     : "xmark.circle.fill")
                 .font(.body)
             if locationManager.territoryValidationPassed {
-                Text("圈地成功！领地面积: \(String(format: "%.0f", locationManager.calculatedArea))m²")
+                Text("map.territory_success \(String(format: "%.0f", locationManager.calculatedArea))m²")
                     .font(.subheadline)
                     .fontWeight(.medium)
             } else {
-                Text(locationManager.territoryValidationError ?? "验证失败")
+                Text(locationManager.territoryValidationError ?? String(localized: "map.validation_failed"))
                     .font(.subheadline)
                     .fontWeight(.medium)
             }
