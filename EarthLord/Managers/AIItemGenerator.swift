@@ -27,9 +27,27 @@ final class AIItemGenerator {
         print("   🔢 数量: \(count)")
 
         do {
-            print("   📡 使用 Supabase SDK 调用 Edge Function...")
+            // ========== 步骤1: 获取有效的用户 Token ==========
+            print("   🔐 正在获取用户认证信息...")
 
-            // 构建请求体
+            // 获取当前会话
+            let session = try await supabase.auth.session
+            print("   📋 当前会话状态: \(session.isExpired ? "已过期" : "有效")")
+
+            // 如果 token 已过期，尝试刷新
+            var accessToken = session.accessToken
+            if session.isExpired {
+                print("   🔄 Token 已过期，正在刷新...")
+                let refreshedSession = try await supabase.auth.refreshSession()
+                accessToken = refreshedSession.accessToken
+                print("   ✅ Token 刷新成功")
+            }
+
+            print("   🎫 Token 获取成功 (前20字符): \(String(accessToken.prefix(20)))...")
+
+            // ========== 步骤2: 构建请求体 ==========
+            print("   📡 正在调用 Edge Function...")
+
             struct FunctionPayload: Encodable {
                 let poi: POIInfo
                 let itemCount: Int
@@ -50,9 +68,15 @@ final class AIItemGenerator {
                 itemCount: count
             )
 
-            // 使用 Supabase SDK 的 functions API
+            // ========== 步骤3: 调用 Edge Function，手动传递 Authorization Header ==========
             let result: GenerateItemResponse = try await supabase.functions
-                .invoke("generate-ai-item", options: FunctionInvokeOptions(body: payload))
+                .invoke(
+                    "generate-ai-item",
+                    options: FunctionInvokeOptions(
+                        headers: ["Authorization": "Bearer \(accessToken)"],  // 关键：手动传递 JWT Token
+                        body: payload
+                    )
+                )
 
             if result.success, let items = result.items {
                 print("   ✅ 成功生成 \(items.count) 个物品")
@@ -76,11 +100,17 @@ final class AIItemGenerator {
                 if let responseString = String(data: data, encoding: .utf8) {
                     print("   📄 响应内容: \(responseString)")
                 }
+
+                // 特别处理 401 错误（认证失败）
+                if code == 401 {
+                    print("   ⚠️ 401 错误：JWT Token 验证失败")
+                    print("   💡 建议：请尝试重新登录")
+                }
             }
 
             // 特别检查是否是认证错误
             if error.localizedDescription.contains("session") || error.localizedDescription.contains("auth") {
-                print("   ⚠️  这可能是认证相关的错误，请确认用户已登录")
+                print("   ⚠️ 这可能是认证相关的错误，请确认用户已登录")
             }
 
             return nil

@@ -219,10 +219,11 @@ private struct ScavengeItemRow: View {
     let delay: Double
     let showItems: Bool
 
-    @State private var showStory = false
+    @State private var isStoryExpanded = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // 主要内容行
             HStack(spacing: 12) {
                 // 物品图标
                 ZStack {
@@ -286,32 +287,8 @@ private struct ScavengeItemRow: View {
             }
 
             // AI 故事（可展开）
-            if let aiStory = item.metadata?["ai_story"] {
-                Button(action: {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        showStory.toggle()
-                    }
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "book.fill")
-                            .font(.caption)
-                            .foregroundColor(ApocalypseTheme.primary)
-
-                        Text(showStory ? aiStory : "\(aiStory.prefix(40))...")
-                            .font(.caption)
-                            .foregroundColor(ApocalypseTheme.textSecondary)
-                            .lineLimit(showStory ? nil : 2)
-                            .multilineTextAlignment(.leading)
-
-                        Spacer()
-
-                        Image(systemName: showStory ? "chevron.up" : "chevron.down")
-                            .font(.caption2)
-                            .foregroundColor(ApocalypseTheme.primary)
-                    }
-                    .padding(.top, 4)
-                }
-                .buttonStyle(PlainButtonStyle())
+            if let aiStory = item.metadata?["ai_story"], !aiStory.isEmpty {
+                StoryExpandableView(story: aiStory, isExpanded: $isStoryExpanded)
             }
         }
         .padding(.vertical, 8)
@@ -321,6 +298,12 @@ private struct ScavengeItemRow: View {
         .scaleEffect(showItems ? 1.0 : 0.8)
         .opacity(showItems ? 1.0 : 0)
         .animation(.easeOut(duration: 0.3).delay(delay), value: showItems)
+        // 阻止动画传播到子视图的用户交互
+        .transaction { transaction in
+            if !showItems {
+                transaction.animation = .easeOut(duration: 0.3).delay(delay)
+            }
+        }
     }
 
     // MARK: - 辅助方法
@@ -364,6 +347,54 @@ private struct ScavengeItemRow: View {
         case .good: return ApocalypseTheme.success
         case .excellent: return ApocalypseTheme.info
         }
+    }
+}
+
+// MARK: - 故事可展开视图
+
+/// 故事可展开视图组件
+/// 独立管理展开状态，避免父视图动画干扰
+private struct StoryExpandableView: View {
+    let story: String
+    @Binding var isExpanded: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            // 故事文本
+            Text(story)
+                .font(.caption)
+                .foregroundColor(ApocalypseTheme.textSecondary)
+                .lineLimit(isExpanded ? nil : 1)
+                .fixedSize(horizontal: false, vertical: true)
+
+            // 展开/收起按钮
+            HStack {
+                Spacer()
+
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isExpanded.toggle()
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Text(isExpanded ?
+                             NSLocalizedString("收起", comment: "Collapse") :
+                             NSLocalizedString("展开故事", comment: "Expand Story"))
+                            .font(.caption2)
+
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(ApocalypseTheme.primary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(ApocalypseTheme.primary.opacity(0.1))
+                    .cornerRadius(4)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .padding(.top, 4)
     }
 }
 
