@@ -17,9 +17,10 @@ enum SupabaseConfig {
         )
 
         // 创建并返回客户端
+        // 注意：使用 Legacy Anon Key 以兼容 Edge Function 的 JWT 验证
         return SupabaseClient(
             supabaseURL: URL(string: "https://vuqfufnrxzsmkzmhtuhw.supabase.co")!,
-            supabaseKey: "sb_publishable_sej6ww803g00vIuiXFjhFQ_JdRV2QHk",
+            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1cWZ1Zm5yeHpzbWt6bWh0dWh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY3NDkzMjcsImV4cCI6MjA4MjMyNTMyN30.37-N8-CzZLsiDeanaIFxsL24SsefNPOKprokySwUVcM",
             options: clientOptions
         )
     }()

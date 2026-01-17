@@ -27,45 +27,32 @@ final class AIItemGenerator {
         print("   🔢 数量: \(count)")
 
         do {
-            // 获取访问令牌
-            let session = try await supabase.auth.session
-            let accessToken = session.accessToken
+            print("   📡 使用 Supabase SDK 调用 Edge Function...")
 
-            // 构建请求
-            let functionURL = URL(string: "https://vuqfufnrxzsmkzmhtuhw.supabase.co/functions/v1/generate-ai-item")!
-            var request = URLRequest(url: functionURL)
-            request.httpMethod = "POST"
-            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            // 构建请求体
+            struct FunctionPayload: Encodable {
+                let poi: POIInfo
+                let itemCount: Int
 
-            let requestBody = GenerateItemRequest(
-                poi: GenerateItemRequest.POIInfo(
+                struct POIInfo: Encodable {
+                    let name: String
+                    let type: String
+                    let dangerLevel: Int
+                }
+            }
+
+            let payload = FunctionPayload(
+                poi: FunctionPayload.POIInfo(
                     name: poi.name,
                     type: poi.type.rawValue,
                     dangerLevel: poi.dangerLevel
                 ),
                 itemCount: count
             )
-            request.httpBody = try JSONEncoder().encode(requestBody)
 
-            // 发送请求
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            guard let httpResponse = response as? HTTPURLResponse else {
-                print("   ❌ 无效的响应")
-                return nil
-            }
-
-            guard httpResponse.statusCode == 200 else {
-                print("   ❌ HTTP \(httpResponse.statusCode)")
-                if let responseString = String(data: data, encoding: .utf8) {
-                    print("   📄 响应: \(responseString)")
-                }
-                return nil
-            }
-
-            // 解析响应
-            let result = try JSONDecoder().decode(GenerateItemResponse.self, from: data)
+            // 使用 Supabase SDK 的 functions API
+            let result: GenerateItemResponse = try await supabase.functions
+                .invoke("generate-ai-item", options: FunctionInvokeOptions(body: payload))
 
             if result.success, let items = result.items {
                 print("   ✅ 成功生成 \(items.count) 个物品")
@@ -80,6 +67,22 @@ final class AIItemGenerator {
 
         } catch {
             print("   ❌ 调用失败: \(error.localizedDescription)")
+            print("   📋 错误详情: \(error)")
+
+            // 如果是 HTTP 错误，尝试解析响应
+            if let httpError = error as? FunctionsError,
+               case .httpError(let code, let data) = httpError {
+                print("   🔍 HTTP \(code) 详细信息:")
+                if let responseString = String(data: data, encoding: .utf8) {
+                    print("   📄 响应内容: \(responseString)")
+                }
+            }
+
+            // 特别检查是否是认证错误
+            if error.localizedDescription.contains("session") || error.localizedDescription.contains("auth") {
+                print("   ⚠️  这可能是认证相关的错误，请确认用户已登录")
+            }
+
             return nil
         }
     }

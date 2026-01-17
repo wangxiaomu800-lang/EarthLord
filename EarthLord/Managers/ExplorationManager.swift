@@ -478,22 +478,32 @@ class ExplorationManager: NSObject, ObservableObject {
 
     /// 根据稀有度和分类选择对应的游戏内物品 ID
     private func selectItemIdByRarity(_ rarity: String, category: String) -> String {
-        // 根据分类和稀有度映射到现有物品系统
+        // 根据分类和稀有度映射到数据库中的实际物品 ID
         switch (category, rarity.lowercased()) {
         case ("医疗", "legendary"), ("医疗", "epic"):
-            return "medical_kit_advanced"
+            return "item_first_aid_kit"
+        case ("医疗", "rare"):
+            return "item_medicine"
         case ("医疗", _):
-            return "medical_bandage"
+            return "item_bandage"
         case ("食物", "legendary"), ("食物", "epic"):
-            return "food_canned_premium"
+            return "item_canned_food"
+        case ("食物", "rare"):
+            return "item_canned_food"
         case ("食物", _):
-            return "food_water"
+            return "item_water_bottle"
+        case ("工具", "legendary"), ("工具", "epic"):
+            return "item_toolbox"
+        case ("工具", "rare"):
+            return "item_radio"
         case ("工具", _):
-            return "tool_flashlight"
+            return "item_flashlight"
         case ("武器", _):
-            return "weapon_baton"
+            return "item_rope"  // 没有武器类，用绳子代替
+        case ("材料", _):
+            return "item_scrap_metal"
         default:
-            return "material_scrap"
+            return "item_wood"  // 默认木材
         }
     }
 
