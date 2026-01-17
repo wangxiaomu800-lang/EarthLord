@@ -2023,6 +2023,36 @@
           }
         }
       }
+    },
+    "数据库连接测试": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Database Connection Test"
+          }
+        }
+      }
+    },
+    "点击按钮开始测试连接...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click button to start testing connection..."
+          }
+        }
+      }
+    },
+    "数据库和圈地功能测试": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Database and Territory Claiming Test"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

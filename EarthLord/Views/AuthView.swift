@@ -120,7 +120,7 @@ struct AuthView: View {
             }
 
             // 标题
-            Text("地球新主")
+            Text(NSLocalizedString("地球新主", comment: "Earth Lord"))
                 .font(.system(size: 32, weight: .bold))
                 .foregroundColor(ApocalypseTheme.textPrimary)
 

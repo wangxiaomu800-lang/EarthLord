@@ -3,13 +3,13 @@ import Supabase
 
 struct SupabaseTestView: View {
     @State private var isConnected: Bool? = nil
-    @State private var debugLog: String = "点击按钮开始测试连接..."
+    @State private var debugLog: String = NSLocalizedString("点击按钮开始测试连接...", comment: "Click button to start testing connection...")
     @State private var isTesting: Bool = false
 
     var body: some View {
         VStack(spacing: 20) {
             // 标题
-            Text("Supabase 连接测试")
+            Text(NSLocalizedString("数据库连接测试", comment: "Database connection test"))
                 .font(.title)
                 .fontWeight(.bold)
                 .padding(.top, 40)

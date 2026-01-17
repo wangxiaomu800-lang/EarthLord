@@ -147,7 +147,7 @@ struct ProfileTabView: View {
                     .foregroundColor(ApocalypseTheme.textSecondary)
 
                 // ID
-                Text("ID: \(String(user.id.uuidString.prefix(8)).uppercased())...")
+                Text(String(format: NSLocalizedString("ID: %@...", comment: "User ID"), String(user.id.uuidString.prefix(8)).uppercased()))
                     .font(.caption)
                     .foregroundColor(ApocalypseTheme.textMuted)
             }

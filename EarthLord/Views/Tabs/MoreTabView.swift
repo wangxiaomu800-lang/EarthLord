@@ -5,15 +5,15 @@ struct MoreTabView: View {
         NavigationView {
             List {
                 // MARK: - 开发测试
-                Section(header: Text("开发工具")) {
+                Section(header: Text(NSLocalizedString("开发工具", comment: "Development tools"))) {
                     NavigationLink(destination: TestMenuView()) {
                         HStack {
                             Image(systemName: "hammer.fill")
                                 .foregroundColor(.orange)
                             VStack(alignment: .leading) {
-                                Text("开发测试")
+                                Text(NSLocalizedString("开发测试", comment: "Development test"))
                                     .font(.headline)
-                                Text("Supabase 和圈地功能测试")
+                                Text(NSLocalizedString("数据库和圈地功能测试", comment: "Database and territory claiming test"))
                                     .font(.caption)
                                     .foregroundColor(.gray)
                             }
@@ -21,7 +21,7 @@ struct MoreTabView: View {
                     }
                 }
             }
-            .navigationTitle("更多")
+            .navigationTitle(NSLocalizedString("更多", comment: "More"))
         }
     }
 }

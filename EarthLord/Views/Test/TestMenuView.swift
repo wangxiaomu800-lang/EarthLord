@@ -28,11 +28,11 @@ struct TestMenuView: View {
 
                         // 标题和描述
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Supabase 连接测试")
+                            Text(NSLocalizedString("数据库连接测试", comment: "Database connection test"))
                                 .font(.headline)
                                 .foregroundColor(ApocalypseTheme.textPrimary)
 
-                            Text("测试数据库连接状态")
+                            Text(NSLocalizedString("测试数据库连接状态", comment: "Test database connection status"))
                                 .font(.caption)
                                 .foregroundColor(ApocalypseTheme.textSecondary)
                         }
@@ -54,11 +54,11 @@ struct TestMenuView: View {
 
                         // 标题和描述
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("圈地功能测试")
+                            Text(NSLocalizedString("圈地功能测试", comment: "Territory claiming test"))
                                 .font(.headline)
                                 .foregroundColor(ApocalypseTheme.textPrimary)
 
-                            Text("查看圈地模块运行日志")
+                            Text(NSLocalizedString("查看圈地模块运行日志", comment: "View territory module logs"))
                                 .font(.caption)
                                 .foregroundColor(ApocalypseTheme.textSecondary)
                         }
@@ -69,7 +69,7 @@ struct TestMenuView: View {
             }
             .scrollContentBackground(.hidden) // 隐藏 List 默认背景
         }
-        .navigationTitle("开发测试")
+        .navigationTitle(NSLocalizedString("开发测试", comment: "Development test"))
         .navigationBarTitleDisplayMode(.large)
     }
 }
