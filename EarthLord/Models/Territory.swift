@@ -77,6 +77,6 @@ struct Territory: Codable, Identifiable {
 
     /// 显示名称（如果没有名称则显示"未命名领地"）
     var displayName: String {
-        return name ?? "未命名领地"
+        return name ?? NSLocalizedString("未命名领地", comment: "Unnamed territory")
     }
 }

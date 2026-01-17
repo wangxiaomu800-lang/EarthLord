@@ -26,14 +26,14 @@ enum POIType: String {
     case pharmacy = "pharmacy"          // 药店
     case factory = "factory"            // 工厂
 
-    /// 中文名称
+    /// 显示名称（支持多语言）
     var displayName: String {
         switch self {
-        case .supermarket: return "废弃超市"
-        case .hospital: return "医院废墟"
-        case .gasStation: return "加油站"
-        case .pharmacy: return "药店废墟"
-        case .factory: return "工厂废墟"
+        case .supermarket: return NSLocalizedString("废弃超市", comment: "Abandoned Supermarket")
+        case .hospital: return NSLocalizedString("医院废墟", comment: "Hospital Ruins")
+        case .gasStation: return NSLocalizedString("加油站", comment: "Gas Station")
+        case .pharmacy: return NSLocalizedString("药店废墟", comment: "Pharmacy Ruins")
+        case .factory: return NSLocalizedString("工厂废墟", comment: "Factory Ruins")
         }
     }
 

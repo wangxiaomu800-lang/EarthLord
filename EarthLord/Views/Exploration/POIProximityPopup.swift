@@ -45,7 +45,7 @@ struct POIProximityPopup: View {
                     HStack(spacing: 4) {
                         Image(systemName: "location.fill")
                             .font(.caption)
-                        Text("距离: \(formatDistance(distance))")
+                        Text(String(format: NSLocalizedString("距离: %@", comment: "Distance: %@"), formatDistance(distance)))
                             .font(.subheadline)
                     }
                     .foregroundColor(ApocalypseTheme.textSecondary)
@@ -122,9 +122,9 @@ struct POIProximityPopup: View {
     /// 格式化距离显示
     private func formatDistance(_ meters: Double) -> String {
         if meters >= 1000 {
-            return String(format: "%.1f 公里", meters / 1000)
+            return String(format: NSLocalizedString("%.1f 公里", comment: "%.1f km"), meters / 1000)
         } else {
-            return String(format: "%.0f 米", meters)
+            return String(format: NSLocalizedString("%.0f 米", comment: "%.0f m"), meters)
         }
     }
 }

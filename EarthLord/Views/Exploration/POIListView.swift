@@ -176,7 +176,7 @@ struct POIListView: View {
             HStack(spacing: 10) {
                 // 全部按钮
                 FilterChip(
-                    title: "全部",
+                    title: NSLocalizedString("全部", comment: "All"),
                     icon: "square.grid.2x2.fill",
                     color: ApocalypseTheme.primary,
                     isSelected: selectedCategory == nil
@@ -444,7 +444,7 @@ private struct POICard: View {
             HStack(spacing: 4) {
                 Image(systemName: "xmark.circle")
                     .font(.caption2)
-                Text("已搜空")
+                Text(NSLocalizedString("已搜空", comment: "Depleted"))
                     .font(.caption2)
             }
             .foregroundColor(ApocalypseTheme.textMuted)

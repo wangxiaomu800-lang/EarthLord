@@ -1697,6 +1697,156 @@
           }
         }
       }
+    },
+    "领地数量": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Territory Count"
+          }
+        }
+      }
+    },
+    "总面积": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total Area"
+          }
+        }
+      }
+    },
+    "未命名领地": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unnamed Territory"
+          }
+        }
+      }
+    },
+    "%.1f 公里": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.1f km"
+          }
+        }
+      }
+    },
+    "%.0f 米": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.0f m"
+          }
+        }
+      }
+    },
+    "废弃超市": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abandoned Supermarket"
+          }
+        }
+      }
+    },
+    "医院废墟": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hospital Ruins"
+          }
+        }
+      }
+    },
+    "加油站": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gas Station"
+          }
+        }
+      }
+    },
+    "药店废墟": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pharmacy Ruins"
+          }
+        }
+      }
+    },
+    "工厂废墟": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Factory Ruins"
+          }
+        }
+      }
+    },
+    "商店": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shop"
+          }
+        }
+      }
+    },
+    "医院": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hospital"
+          }
+        }
+      }
+    },
+    "超市": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supermarket"
+          }
+        }
+      }
+    },
+    "药店": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pharmacy"
+          }
+        }
+      }
+    },
+    "工厂": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Factory"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

@@ -110,7 +110,7 @@ struct TerritoryTabView: View {
             // 领地数量
             StatisticItem(
                 icon: "flag.fill",
-                title: "领地数量",
+                title: NSLocalizedString("领地数量", comment: "Territory count"),
                 value: "\(territoryCount)",
                 color: .green
             )
@@ -118,7 +118,7 @@ struct TerritoryTabView: View {
             // 总面积
             StatisticItem(
                 icon: "map.fill",
-                title: "总面积",
+                title: NSLocalizedString("总面积", comment: "Total area"),
                 value: formattedTotalArea,
                 color: .orange
             )

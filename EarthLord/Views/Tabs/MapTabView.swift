@@ -490,12 +490,12 @@ struct MapTabView: View {
 
                 // 文本
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(locationManager.isTracking ? "停止圈地" : "开始圈地")
+                    Text(locationManager.isTracking ? NSLocalizedString("停止圈地", comment: "Stop claiming") : NSLocalizedString("开始圈地", comment: "Start claiming"))
                         .font(.system(size: 14, weight: .semibold))
 
                     // 追踪中显示点数
                     if locationManager.isTracking {
-                        Text("\(locationManager.pathCoordinates.count) 点")
+                        Text(String(format: NSLocalizedString("%lld 点", comment: "%lld points"), locationManager.pathCoordinates.count))
                             .font(.system(size: 11))
                     }
                 }
@@ -540,7 +540,7 @@ struct MapTabView: View {
 
                 // 文本和数据
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(explorationManager.isExploring ? "结束探索" : "探索")
+                    Text(explorationManager.isExploring ? NSLocalizedString("结束探索", comment: "End exploration") : NSLocalizedString("探索", comment: "Explore"))
                         .font(.system(size: 14, weight: .semibold))
 
                     // 探索中显示距离和下一等级

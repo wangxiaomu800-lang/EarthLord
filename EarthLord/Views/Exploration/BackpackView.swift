@@ -231,7 +231,7 @@ struct BackpackView: View {
             HStack(spacing: 10) {
                 // 全部按钮
                 CategoryChip(
-                    title: "全部",
+                    title: NSLocalizedString("全部", comment: "All"),
                     icon: "square.grid.2x2.fill",
                     color: ApocalypseTheme.primary,
                     isSelected: selectedCategory == nil
