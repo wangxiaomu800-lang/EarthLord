@@ -63,7 +63,7 @@ struct ExplorationResultView: View {
                     successView(result: result)
                 } else {
                     // 默认错误
-                    errorView(message: "未知错误")
+                    errorView(message: NSLocalizedString("未知错误", comment: "Unknown error"))
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -146,7 +146,7 @@ struct ExplorationResultView: View {
             .opacity(showContent ? 1.0 : 0)
 
             // 错误标题
-            Text("探索失败")
+            Text(NSLocalizedString("探索失败", comment: "Exploration failed"))
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(ApocalypseTheme.textPrimary)
@@ -176,7 +176,7 @@ struct ExplorationResultView: View {
                             Image(systemName: "arrow.clockwise")
                                 .font(.headline)
 
-                            Text("重试")
+                            Text(NSLocalizedString("重试", comment: "Retry"))
                                 .font(.headline)
                         }
                         .frame(maxWidth: .infinity)
@@ -189,7 +189,7 @@ struct ExplorationResultView: View {
 
                 // 关闭按钮
                 Button(action: { dismiss() }) {
-                    Text("关闭")
+                    Text(NSLocalizedString("关闭", comment: "Close"))
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
@@ -248,11 +248,11 @@ struct ExplorationResultView: View {
 
             // 标题文字
             VStack(spacing: 8) {
-                Text("探索完成！")
+                Text(NSLocalizedString("探索完成！", comment: "Exploration complete!"))
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(ApocalypseTheme.textPrimary)
 
-                Text("你发现了新的区域")
+                Text(NSLocalizedString("你发现了新的区域", comment: "You discovered new areas"))
                     .font(.subheadline)
                     .foregroundColor(ApocalypseTheme.textSecondary)
             }
@@ -269,7 +269,7 @@ struct ExplorationResultView: View {
                 Image(systemName: "chart.bar.fill")
                     .foregroundColor(ApocalypseTheme.info)
 
-                Text("探索统计")
+                Text(NSLocalizedString("探索统计", comment: "Exploration statistics"))
                     .font(.headline)
                     .foregroundColor(ApocalypseTheme.textPrimary)
 
@@ -279,9 +279,9 @@ struct ExplorationResultView: View {
             // 行走距离（使用动画值）
             StatRow(
                 icon: "figure.walk",
-                title: "行走距离",
+                title: NSLocalizedString("行走距离", comment: "Walking distance"),
                 currentValue: MockExplorationData.formatDistance(animatedWalkingDistance),
-                totalValue: "累计 " + MockExplorationData.formatDistance(result.totalDistance),
+                totalValue: NSLocalizedString("累计 ", comment: "Total ") + MockExplorationData.formatDistance(result.totalDistance),
                 rank: result.distanceRank
             )
 
@@ -294,7 +294,7 @@ struct ExplorationResultView: View {
                     .foregroundColor(ApocalypseTheme.textSecondary)
                     .frame(width: 24)
 
-                Text("探索时长")
+                Text(NSLocalizedString("探索时长", comment: "Exploration duration"))
                     .foregroundColor(ApocalypseTheme.textSecondary)
 
                 Spacer()
@@ -319,13 +319,13 @@ struct ExplorationResultView: View {
                 Image(systemName: "gift.fill")
                     .foregroundColor(ApocalypseTheme.warning)
 
-                Text("获得物品")
+                Text(NSLocalizedString("获得物品", comment: "Items obtained"))
                     .font(.headline)
                     .foregroundColor(ApocalypseTheme.textPrimary)
 
                 Spacer()
 
-                Text("\(result.obtainedItems.count) 件")
+                Text("\(result.obtainedItems.count)" + NSLocalizedString(" 件", comment: " items"))
                     .font(.subheadline)
                     .foregroundColor(ApocalypseTheme.textSecondary)
             }
@@ -338,11 +338,11 @@ struct ExplorationResultView: View {
                         .font(.system(size: 50))
                         .foregroundColor(ApocalypseTheme.textMuted)
 
-                    Text("什么都没找到")
+                    Text(NSLocalizedString("什么都没找到", comment: "Nothing found"))
                         .font(.headline)
                         .foregroundColor(ApocalypseTheme.textSecondary)
 
-                    Text("这里已经被搜刮一空了")
+                    Text(NSLocalizedString("这里已经被搜刮一空了", comment: "This place has been looted"))
                         .font(.subheadline)
                         .foregroundColor(ApocalypseTheme.textMuted)
                         .multilineTextAlignment(.center)
@@ -372,7 +372,7 @@ struct ExplorationResultView: View {
                         .font(.caption)
                         .foregroundColor(ApocalypseTheme.success)
 
-                    Text("已添加到背包")
+                    Text(NSLocalizedString("已添加到背包", comment: "Added to backpack"))
                         .font(.caption)
                         .foregroundColor(ApocalypseTheme.success)
                 }
@@ -394,7 +394,7 @@ struct ExplorationResultView: View {
                 Image(systemName: "checkmark")
                     .font(.headline)
 
-                Text("确认收下")
+                Text(NSLocalizedString("确认收下", comment: "Confirm"))
                     .font(.headline)
             }
             .frame(maxWidth: .infinity)

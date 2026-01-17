@@ -185,7 +185,7 @@ struct ProfileTabView: View {
             StatItem(
                 icon: "figure.walk",
                 value: "0",
-                label: "探索距离"
+                label: NSLocalizedString("探索距离", comment: "Exploration distance")
             )
         }
         .padding(.vertical, 20)

@@ -1847,6 +1847,96 @@
           }
         }
       }
+    },
+    "未知错误": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown error"
+          }
+        }
+      }
+    },
+    "行走距离": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Walking distance"
+          }
+        }
+      }
+    },
+    "累计 ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total "
+          }
+        }
+      }
+    },
+    " 件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " items"
+          }
+        }
+      }
+    },
+    " 点": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " points"
+          }
+        }
+      }
+    },
+    "附近发现 %d 个地点": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discovered %d places nearby"
+          }
+        }
+      }
+    },
+    "未发现": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undiscovered"
+          }
+        }
+      }
+    },
+    "已发现": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discovered"
+          }
+        }
+      }
+    },
+    "已探索": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explored"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

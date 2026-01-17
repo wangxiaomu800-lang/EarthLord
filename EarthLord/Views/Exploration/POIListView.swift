@@ -79,7 +79,7 @@ struct POIListView: View {
                     .padding(.top, 12)
             }
         }
-        .navigationTitle("附近地点")
+        .navigationTitle(NSLocalizedString("附近地点", comment: "Nearby places"))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingDetail) {
             if let poi = selectedPOI {
@@ -112,7 +112,7 @@ struct POIListView: View {
                     .font(.caption)
                     .foregroundColor(ApocalypseTheme.primary)
 
-                Text("附近发现 \(discoveredCount) 个地点")
+                Text(String(format: NSLocalizedString("附近发现 %d 个地点", comment: "Discovered %d places nearby"), discoveredCount))
                     .font(.caption)
                     .foregroundColor(ApocalypseTheme.textSecondary)
             }
@@ -144,7 +144,7 @@ struct POIListView: View {
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         .scaleEffect(0.9)
 
-                    Text("搜索中...")
+                    Text(NSLocalizedString("搜索中...", comment: "Searching..."))
                         .font(.headline)
                         .foregroundColor(.white)
                 } else {
@@ -152,7 +152,7 @@ struct POIListView: View {
                         .font(.title3)
                         .foregroundColor(.white)
 
-                    Text("搜索附近POI")
+                    Text(NSLocalizedString("搜索附近POI", comment: "Search nearby POI"))
                         .font(.headline)
                         .foregroundColor(.white)
                 }
@@ -242,18 +242,18 @@ struct POIListView: View {
                 .foregroundColor(ApocalypseTheme.textMuted)
 
             // 标题
-            Text(selectedCategory == nil ? "附近暂无兴趣点" : "没有找到该类型的地点")
+            Text(selectedCategory == nil ? NSLocalizedString("附近暂无兴趣点", comment: "No points of interest nearby") : NSLocalizedString("没有找到该类型的地点", comment: "No places of this type found"))
                 .font(.headline)
                 .foregroundColor(ApocalypseTheme.textSecondary)
 
             // 提示文字
             if selectedCategory == nil {
-                Text("点击搜索按钮发现周围的废墟")
+                Text(NSLocalizedString("点击搜索按钮发现周围的废墟", comment: "Click the search button to discover nearby ruins"))
                     .font(.subheadline)
                     .foregroundColor(ApocalypseTheme.textMuted)
                     .multilineTextAlignment(.center)
             } else {
-                Text("尝试切换其他分类或清除筛选")
+                Text(NSLocalizedString("尝试切换其他分类或清除筛选", comment: "Try switching to other categories or clearing filters"))
                     .font(.subheadline)
                     .foregroundColor(ApocalypseTheme.textMuted)
                     .multilineTextAlignment(.center)
@@ -431,12 +431,12 @@ private struct POICard: View {
                 HStack(spacing: 4) {
                     Image(systemName: "cube.box.fill")
                         .font(.caption2)
-                    Text("有物资")
+                    Text(NSLocalizedString("有物资", comment: "Has supplies"))
                         .font(.caption2)
                 }
                 .foregroundColor(ApocalypseTheme.warning)
             } else {
-                Text("无物资")
+                Text(NSLocalizedString("无物资", comment: "No supplies"))
                     .font(.caption2)
                     .foregroundColor(ApocalypseTheme.textMuted)
             }
@@ -463,9 +463,9 @@ private struct POICard: View {
     /// 状态文字
     private var statusText: String {
         switch poi.status {
-        case .undiscovered: return "未发现"
-        case .discovered: return "已发现"
-        case .looted: return "已探索"
+        case .undiscovered: return NSLocalizedString("未发现", comment: "Undiscovered")
+        case .discovered: return NSLocalizedString("已发现", comment: "Discovered")
+        case .looted: return NSLocalizedString("已探索", comment: "Explored")
         }
     }
 }

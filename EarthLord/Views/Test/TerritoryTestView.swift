@@ -46,7 +46,7 @@ struct TerritoryTestView: View {
                     .background(ApocalypseTheme.cardBackground)
             }
         }
-        .navigationTitle("圈地测试")
+        .navigationTitle(NSLocalizedString("圈地测试", comment: "Territory test"))
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -61,13 +61,13 @@ struct TerritoryTestView: View {
                 .frame(width: 12, height: 12)
 
             // 状态文字
-            Text(locationManager.isTracking ? "追踪中" : "未追踪")
+            Text(locationManager.isTracking ? NSLocalizedString("追踪中", comment: "Tracking") : NSLocalizedString("未追踪", comment: "Not tracking"))
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(ApocalypseTheme.textPrimary)
 
             // 点数统计
             if locationManager.isTracking {
-                Text("(\(locationManager.pathCoordinates.count) 点)")
+                Text("(\(locationManager.pathCoordinates.count)" + NSLocalizedString(" 点", comment: " points") + ")")
                     .font(.system(size: 14))
                     .foregroundColor(ApocalypseTheme.textSecondary)
             }
@@ -84,7 +84,7 @@ struct TerritoryTestView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     if logger.logs.isEmpty {
                         // 空状态提示
-                        Text("暂无日志\n\n请在「地图」Tab 中开始圈地，\n日志将在这里实时显示")
+                        Text(NSLocalizedString("暂无日志\n\n请在「地图」Tab 中开始圈地，\n日志将在这里实时显示", comment: "No logs yet. Start claiming territory in the Map tab, and logs will appear here"))
                             .font(.system(size: 14))
                             .foregroundColor(ApocalypseTheme.textSecondary)
                             .multilineTextAlignment(.center)
@@ -148,7 +148,7 @@ struct TerritoryTestView: View {
             }) {
                 HStack(spacing: 8) {
                     Image(systemName: "trash")
-                    Text("清空日志")
+                    Text(NSLocalizedString("清空日志", comment: "Clear logs"))
                 }
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.white)
@@ -162,7 +162,7 @@ struct TerritoryTestView: View {
             ShareLink(item: logger.export()) {
                 HStack(spacing: 8) {
                     Image(systemName: "square.and.arrow.up")
-                    Text("导出日志")
+                    Text(NSLocalizedString("导出日志", comment: "Export logs"))
                 }
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.white)
