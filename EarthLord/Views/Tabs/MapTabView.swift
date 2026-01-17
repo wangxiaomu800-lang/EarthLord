@@ -335,7 +335,7 @@ struct MapTabView: View {
 
             if let location = userLocation ?? locationManager.userLocation {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("当前坐标")
+                    Text(NSLocalizedString("当前坐标", comment: "Current coordinates"))
                         .font(.system(size: 11))
                         .foregroundColor(ApocalypseTheme.textSecondary)
 

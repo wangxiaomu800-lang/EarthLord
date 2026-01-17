@@ -2,6 +2,28 @@
   "sourceLanguage": "zh-Hans",
   "strings": {
     "": {},
+    " 件": {
+      "comment": " items",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " items"
+          }
+        }
+      }
+    },
+    " 点": {
+      "comment": " points",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " points"
+          }
+        }
+      }
+    },
     "???": {
       "localizations": {
         "en": {
@@ -13,6 +35,7 @@
       }
     },
     "(%lld 点)": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -52,6 +75,28 @@
         }
       }
     },
+    "%.0f 米": {
+      "comment": "%.0f m",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.0f m"
+          }
+        }
+      }
+    },
+    "%.1f 公里": {
+      "comment": "%.1f km",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%.1f km"
+          }
+        }
+      }
+    },
     "%lld 件": {
       "localizations": {
         "en": {
@@ -63,6 +108,7 @@
       }
     },
     "%lld 点": {
+      "comment": "%lld points",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -74,16 +120,16 @@
     },
     "%lldm / %lldm %@": {
       "localizations": {
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$lldm / %2$lldm %3$@"
-          }
-        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%lldm / %lldm %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lldm / %2$lldm %3$@"
           }
         }
       }
@@ -209,6 +255,7 @@
       }
     },
     "什么都没找到": {
+      "comment": "Nothing found",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -219,6 +266,7 @@
       }
     },
     "你发现了新的区域": {
+      "comment": "You discovered new areas",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -269,6 +317,7 @@
       }
     },
     "停止圈地": {
+      "comment": "Stop claiming",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -277,6 +326,9 @@
           }
         }
       }
+    },
+    "全部": {
+      "comment": "All"
     },
     "关于": {
       "localizations": {
@@ -289,6 +341,7 @@
       }
     },
     "关闭": {
+      "comment": "Close",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -358,12 +411,45 @@
         }
       }
     },
+    "加油站": {
+      "comment": "Gas Station",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gas Station"
+          }
+        }
+      }
+    },
     "加载中...": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Loading..."
+          }
+        }
+      }
+    },
+    "医院": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hospital"
+          }
+        }
+      }
+    },
+    "医院废墟": {
+      "comment": "Hospital Ruins",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hospital Ruins"
           }
         }
       }
@@ -428,6 +514,17 @@
         }
       }
     },
+    "商店": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shop"
+          }
+        }
+      }
+    },
     "圈地功能测试": {
       "localizations": {
         "en": {
@@ -449,6 +546,7 @@
       }
     },
     "圈地测试": {
+      "comment": "Territory test",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -539,6 +637,7 @@
       }
     },
     "导出日志": {
+      "comment": "Export logs",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -549,6 +648,7 @@
       }
     },
     "尝试切换其他分类或清除筛选": {
+      "comment": "Try switching to other categories or clearing filters",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -568,7 +668,52 @@
         }
       }
     },
+    "工厂": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Factory"
+          }
+        }
+      }
+    },
+    "工厂废墟": {
+      "comment": "Factory Ruins",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Factory Ruins"
+          }
+        }
+      }
+    },
+    "已发现": {
+      "comment": "Discovered",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discovered"
+          }
+        }
+      }
+    },
+    "已探索": {
+      "comment": "Explored",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Explored"
+          }
+        }
+      }
+    },
     "已搜空": {
+      "comment": "Depleted",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -579,6 +724,7 @@
       }
     },
     "已添加到背包": {
+      "comment": "Added to backpack",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -604,6 +750,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Survivor Profile"
+          }
+        }
+      }
+    },
+    "废弃超市": {
+      "comment": "Abandoned Supermarket",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abandoned Supermarket"
           }
         }
       }
@@ -639,6 +796,7 @@
       }
     },
     "开始圈地": {
+      "comment": "Start claiming",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -674,6 +832,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Forgot Password?"
+          }
+        }
+      }
+    },
+    "总面积": {
+      "comment": "Total area",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total Area"
           }
         }
       }
@@ -739,6 +908,7 @@
       }
     },
     "探索": {
+      "comment": "Explore",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -749,6 +919,7 @@
       }
     },
     "探索失败": {
+      "comment": "Exploration failed",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -759,6 +930,7 @@
       }
     },
     "探索完成！": {
+      "comment": "Exploration complete!",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -769,6 +941,7 @@
       }
     },
     "探索时长": {
+      "comment": "Exploration duration",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -779,6 +952,7 @@
       }
     },
     "探索统计": {
+      "comment": "Exploration statistics",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -819,6 +993,7 @@
       }
     },
     "搜索中...": {
+      "comment": "Searching...",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -839,6 +1014,7 @@
       }
     },
     "搜索附近POI": {
+      "comment": "Search nearby POI",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -869,6 +1045,7 @@
       }
     },
     "无物资": {
+      "comment": "No supplies",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -879,6 +1056,7 @@
       }
     },
     "暂无日志\n\n请在「地图」Tab 中开始圈地，\n日志将在这里实时显示": {
+      "comment": "No logs yet. Start claiming territory in the Map tab, and logs will appear here",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -909,6 +1087,7 @@
       }
     },
     "有物资": {
+      "comment": "Has supplies",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -918,7 +1097,41 @@
         }
       }
     },
+    "未发现": {
+      "comment": "Undiscovered",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undiscovered"
+          }
+        }
+      }
+    },
+    "未命名领地": {
+      "comment": "Unnamed territory",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unnamed Territory"
+          }
+        }
+      }
+    },
+    "未知错误": {
+      "comment": "Unknown error",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown error"
+          }
+        }
+      }
+    },
     "未追踪": {
+      "comment": "Not tracking",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1009,6 +1222,7 @@
       }
     },
     "没有找到该类型的地点": {
+      "comment": "No places of this type found",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1059,6 +1273,7 @@
       }
     },
     "清空日志": {
+      "comment": "Clear logs",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1079,6 +1294,7 @@
       }
     },
     "点击搜索按钮发现周围的废墟": {
+      "comment": "Click the search button to discover nearby ruins",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1169,6 +1385,7 @@
       }
     },
     "确认收下": {
+      "comment": "Confirm",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1218,7 +1435,19 @@
         }
       }
     },
+    "累计 ": {
+      "comment": "Total ",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total "
+          }
+        }
+      }
+    },
     "结束探索": {
+      "comment": "End exploration",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1268,12 +1497,46 @@
         }
       }
     },
+    "药店": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pharmacy"
+          }
+        }
+      }
+    },
+    "药店废墟": {
+      "comment": "Pharmacy Ruins",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pharmacy Ruins"
+          }
+        }
+      }
+    },
     "获得物品": {
+      "comment": "Items obtained",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Items Obtained"
+          }
+        }
+      }
+    },
+    "行走距离": {
+      "comment": "Walking distance",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Walking distance"
           }
         }
       }
@@ -1468,7 +1731,22 @@
         }
       }
     },
+    "超市": {
+      "extractionState": "stale",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supermarket"
+          }
+        }
+      }
+    },
+    "距离": {
+      "comment": "Distance"
+    },
     "距离: %@": {
+      "comment": "Distance: %@",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1499,6 +1777,7 @@
       }
     },
     "这里已经被搜刮一空了": {
+      "comment": "This place has been looted",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1509,6 +1788,7 @@
       }
     },
     "追踪中": {
+      "comment": "Tracking",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1589,6 +1869,7 @@
       }
     },
     "重试": {
+      "comment": "Retry",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1598,7 +1879,19 @@
         }
       }
     },
+    "附近发现 %d 个地点": {
+      "comment": "Discovered %d places nearby",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discovered %d places nearby"
+          }
+        }
+      }
+    },
     "附近发现 %lld 个地点": {
+      "extractionState": "stale",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1609,6 +1902,7 @@
       }
     },
     "附近地点": {
+      "comment": "Nearby places",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1619,6 +1913,7 @@
       }
     },
     "附近暂无兴趣点": {
+      "comment": "No points of interest nearby",
       "localizations": {
         "en": {
           "stringUnit": {
@@ -1654,6 +1949,17 @@
           "stringUnit": {
             "state": "translated",
             "value": "Territory Data"
+          }
+        }
+      }
+    },
+    "领地数量": {
+      "comment": "Territory count",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Territory Count"
           }
         }
       }
@@ -1698,242 +2004,22 @@
         }
       }
     },
-    "领地数量": {
+    "%d 点": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Territory Count"
+            "value": "%d points"
           }
         }
       }
     },
-    "总面积": {
+    "未知时间": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Total Area"
-          }
-        }
-      }
-    },
-    "未命名领地": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unnamed Territory"
-          }
-        }
-      }
-    },
-    "%.1f 公里": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%.1f km"
-          }
-        }
-      }
-    },
-    "%.0f 米": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%.0f m"
-          }
-        }
-      }
-    },
-    "废弃超市": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abandoned Supermarket"
-          }
-        }
-      }
-    },
-    "医院废墟": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hospital Ruins"
-          }
-        }
-      }
-    },
-    "加油站": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gas Station"
-          }
-        }
-      }
-    },
-    "药店废墟": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pharmacy Ruins"
-          }
-        }
-      }
-    },
-    "工厂废墟": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Factory Ruins"
-          }
-        }
-      }
-    },
-    "商店": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Shop"
-          }
-        }
-      }
-    },
-    "医院": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hospital"
-          }
-        }
-      }
-    },
-    "超市": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Supermarket"
-          }
-        }
-      }
-    },
-    "药店": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pharmacy"
-          }
-        }
-      }
-    },
-    "工厂": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Factory"
-          }
-        }
-      }
-    },
-    "未知错误": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Unknown error"
-          }
-        }
-      }
-    },
-    "行走距离": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Walking distance"
-          }
-        }
-      }
-    },
-    "累计 ": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Total "
-          }
-        }
-      }
-    },
-    " 件": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": " items"
-          }
-        }
-      }
-    },
-    " 点": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": " points"
-          }
-        }
-      }
-    },
-    "附近发现 %d 个地点": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Discovered %d places nearby"
-          }
-        }
-      }
-    },
-    "未发现": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Undiscovered"
-          }
-        }
-      }
-    },
-    "已发现": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Discovered"
-          }
-        }
-      }
-    },
-    "已探索": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Explored"
+            "value": "Unknown time"
           }
         }
       }

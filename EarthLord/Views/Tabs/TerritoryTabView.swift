@@ -55,7 +55,7 @@ struct TerritoryTabView: View {
             ZStack {
                 if isLoading && myTerritories.isEmpty {
                     // 加载中
-                    ProgressView("加载中...")
+                    ProgressView(NSLocalizedString("加载中...", comment: "Loading..."))
                 } else if myTerritories.isEmpty {
                     // 空状态
                     emptyStateView
@@ -85,7 +85,7 @@ struct TerritoryTabView: View {
                     }
                 }
             }
-            .navigationTitle("我的领地")
+            .navigationTitle(NSLocalizedString("我的领地", comment: "My Territories"))
             .navigationBarTitleDisplayMode(.large)
             .task {
                 await loadTerritories()
@@ -136,11 +136,11 @@ struct TerritoryTabView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
 
-            Text("还没有领地")
+            Text(NSLocalizedString("还没有领地", comment: "No territories yet"))
                 .font(.title2)
                 .fontWeight(.semibold)
 
-            Text("去地图上圈地吧")
+            Text(NSLocalizedString("去地图上圈地吧", comment: "Go claim territory on the map"))
                 .font(.body)
                 .foregroundColor(.secondary)
         }
@@ -198,7 +198,7 @@ private struct TerritoryCard: View {
     /// 格式化时间显示
     private var formattedDate: String {
         guard let createdAt = territory.createdAt else {
-            return "未知时间"
+            return NSLocalizedString("未知时间", comment: "Unknown time")
         }
 
         // PostgreSQL 返回格式：2026-01-08 05:25:59.679755+00
@@ -218,7 +218,7 @@ private struct TerritoryCard: View {
             fallbackFormatter.timeZone = TimeZone(secondsFromGMT: 0)
 
             guard let fallbackDate = fallbackFormatter.date(from: createdAt) else {
-                return "未知时间"
+                return NSLocalizedString("未知时间", comment: "Unknown time")
             }
 
             let displayFormatter = DateFormatter()
@@ -263,7 +263,7 @@ private struct TerritoryCard: View {
                 Spacer()
 
                 if let pointCount = territory.pointCount {
-                    Label("\(pointCount) 点", systemImage: "point.topleft.down.curvedto.point.bottomright.up")
+                    Label(String(format: NSLocalizedString("%d 点", comment: "%d points"), pointCount), systemImage: "point.topleft.down.curvedto.point.bottomright.up")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
