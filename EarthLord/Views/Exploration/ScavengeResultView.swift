@@ -377,9 +377,7 @@ private struct StoryExpandableView: View {
                     }
                 }) {
                     HStack(spacing: 4) {
-                        Text(isExpanded ?
-                             NSLocalizedString("收起", comment: "Collapse") :
-                             NSLocalizedString("展开故事", comment: "Expand Story"))
+                        Text(isExpanded ? "story.collapse" : "story.expand")
                             .font(.caption2)
 
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
@@ -417,11 +415,11 @@ private struct RarityBadge: View {
 
     var rarityText: String {
         switch rarity.lowercased() {
-        case "common": return "普通"
-        case "uncommon": return "优秀"
-        case "rare": return "稀有"
-        case "epic": return "史诗"
-        case "legendary": return "传奇"
+        case "common": return String(localized: "rarity.common")
+        case "uncommon": return String(localized: "rarity.uncommon")
+        case "rare": return String(localized: "rarity.rare")
+        case "epic": return String(localized: "rarity.epic")
+        case "legendary": return String(localized: "rarity.legendary")
         default: return rarity
         }
     }

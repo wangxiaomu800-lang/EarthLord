@@ -51,6 +51,7 @@ final class AIItemGenerator {
             struct FunctionPayload: Encodable {
                 let poi: POIInfo
                 let itemCount: Int
+                let language: String  // 新增：用户语言偏好
 
                 struct POIInfo: Encodable {
                     let name: String
@@ -59,13 +60,18 @@ final class AIItemGenerator {
                 }
             }
 
+            // 获取当前语言设置
+            let currentLang = LanguageManager.shared.currentLanguage.languageCode ?? "zh-Hans"
+            print("   🌍 当前语言: \(currentLang)")
+
             let payload = FunctionPayload(
                 poi: FunctionPayload.POIInfo(
                     name: poi.name,
                     type: poi.type.rawValue,
                     dangerLevel: poi.dangerLevel
                 ),
-                itemCount: count
+                itemCount: count,
+                language: currentLang
             )
 
             // ========== 步骤3: 调用 Edge Function，手动传递 Authorization Header ==========
