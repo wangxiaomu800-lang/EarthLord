@@ -25,6 +25,10 @@ struct SettingsView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 20)
 
+                    // 支持与隐私卡片
+                    supportLinksCard
+                        .padding(.horizontal, 20)
+
                     // 版本信息
                     versionInfoCard
                         .padding(.horizontal, 20)
@@ -72,6 +76,72 @@ struct SettingsView: View {
                         .foregroundColor(ApocalypseTheme.primary)
 
                     Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(ApocalypseTheme.textMuted)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            }
+        }
+        .background(ApocalypseTheme.cardBackground)
+        .cornerRadius(12)
+    }
+
+    // MARK: - 支持与隐私卡片
+    private var supportLinksCard: some View {
+        VStack(spacing: 0) {
+            // 标题
+            HStack {
+                Image(systemName: "info.circle")
+                    .foregroundColor(ApocalypseTheme.primary)
+                Text("settings.support_privacy")
+                    .font(.headline)
+                    .foregroundColor(ApocalypseTheme.textPrimary)
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+
+            Divider()
+                .background(ApocalypseTheme.textMuted.opacity(0.3))
+
+            // 技术支持链接
+            Link(destination: URL(string: "https://wangxiaomu800-lang.github.io/earthlord-support/")!) {
+                HStack {
+                    Image(systemName: "questionmark.circle")
+                        .foregroundColor(ApocalypseTheme.textSecondary)
+                        .frame(width: 24)
+
+                    Text("settings.technical_support")
+                        .foregroundColor(ApocalypseTheme.textPrimary)
+
+                    Spacer()
+
+                    Image(systemName: "arrow.up.right.square")
+                        .font(.caption)
+                        .foregroundColor(ApocalypseTheme.textMuted)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            }
+
+            Divider()
+                .background(ApocalypseTheme.textMuted.opacity(0.3))
+                .padding(.leading, 56)
+
+            // 隐私政策链接
+            Link(destination: URL(string: "https://wangxiaomu800-lang.github.io/earthlord-support/privacy.html")!) {
+                HStack {
+                    Image(systemName: "hand.raised")
+                        .foregroundColor(ApocalypseTheme.textSecondary)
+                        .frame(width: 24)
+
+                    Text("settings.privacy_policy")
+                        .foregroundColor(ApocalypseTheme.textPrimary)
+
+                    Spacer()
+
+                    Image(systemName: "arrow.up.right.square")
                         .font(.caption)
                         .foregroundColor(ApocalypseTheme.textMuted)
                 }
