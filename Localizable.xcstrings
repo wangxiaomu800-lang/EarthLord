@@ -203,13 +203,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Earth Lord"
+            "value" : "Apocalypse Lord"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "地球新主"
+            "value" : "末日领主"
           }
         }
       }
