@@ -84,11 +84,11 @@ struct SplashView: View {
 
                 // 标题
                 VStack(spacing: 8) {
-                    Text(NSLocalizedString("地球新主", comment: "Earth Lord"))
+                    Text(NSLocalizedString("末日领主", comment: "Apocalypse Lord"))
                         .font(.system(size: 36, weight: .bold))
                         .foregroundColor(ApocalypseTheme.textPrimary)
 
-                    Text("EARTH LORD")
+                    Text("APOCALYPSE LORD")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(ApocalypseTheme.textSecondary)
                         .tracking(4)

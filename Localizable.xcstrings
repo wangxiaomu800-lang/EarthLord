@@ -57,13 +57,13 @@
         }
       }
     },
-    "《地球新主》需要获取您的位置\n来显示您在末日世界中的坐标" : {
+    "《末日领主》需要获取您的位置\n来显示您在末日世界中的坐标" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Earth Lord needs your location\nto show your coordinates in the apocalyptic world"
+            "value" : "Apocalypse Lord needs your location\nto show your coordinates in the apocalyptic world"
           }
         }
       }
@@ -358,12 +358,12 @@
         }
       }
     },
-    "EARTH LORD" : {
+    "APOCALYPSE LORD" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "EARTH LORD"
+            "value" : "APOCALYPSE LORD"
           }
         }
       }
@@ -480,13 +480,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Earth Lord needs access to your location\nto show your coordinates in the apocalyptic world"
+            "value" : "Apocalypse Lord needs access to your location\nto show your coordinates in the apocalyptic world"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "《地球新主》需要获取您的位置\n来显示您在末日世界中的坐标"
+            "value" : "《末日领主》需要获取您的位置\n来显示您在末日世界中的坐标"
           }
         }
       }
@@ -2113,13 +2113,13 @@
         }
       }
     },
-    "地球新主" : {
-      "comment" : "Earth Lord",
+    "末日领主" : {
+      "comment" : "Apocalypse Lord",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Earth Lord"
+            "value" : "Apocalypse Lord"
           }
         }
       }
