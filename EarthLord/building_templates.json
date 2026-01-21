@@ -1,0 +1,68 @@
+[
+  {
+    "template_id": "building_campfire",
+    "name": "篝火",
+    "category": "survival",
+    "tier": 1,
+    "required_resources": {
+      "wood": 5,
+      "stone": 3
+    },
+    "build_time_seconds": 60,
+    "max_per_territory": null,
+    "max_level": 3
+  },
+  {
+    "template_id": "building_shelter",
+    "name": "简易庇护所",
+    "category": "survival",
+    "tier": 1,
+    "required_resources": {
+      "wood": 15,
+      "cloth": 5,
+      "rope": 2
+    },
+    "build_time_seconds": 300,
+    "max_per_territory": 2,
+    "max_level": 5
+  },
+  {
+    "template_id": "building_small_storage",
+    "name": "小型仓库",
+    "category": "storage",
+    "tier": 1,
+    "required_resources": {
+      "wood": 20,
+      "scrap_metal": 10
+    },
+    "build_time_seconds": 180,
+    "max_per_territory": 3,
+    "max_level": 4
+  },
+  {
+    "template_id": "building_farm",
+    "name": "简易农田",
+    "category": "production",
+    "tier": 1,
+    "required_resources": {
+      "wood": 10,
+      "stone": 5
+    },
+    "build_time_seconds": 240,
+    "max_per_territory": 5,
+    "max_level": 3
+  },
+  {
+    "template_id": "building_solar_panel",
+    "name": "太阳能板",
+    "category": "energy",
+    "tier": 2,
+    "required_resources": {
+      "scrap_metal": 25,
+      "wire": 10
+    },
+    "build_time_seconds": 600,
+    "max_per_territory": 2,
+    "max_level": 3
+  }
+]
