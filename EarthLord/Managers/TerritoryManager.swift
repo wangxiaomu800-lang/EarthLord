@@ -436,4 +436,64 @@ class TerritoryManager: ObservableObject {
             warningLevel: warningLevel
         )
     }
+
+    // MARK: - 领地更新
+
+    /// 重命名领地
+    /// - Parameters:
+    ///   - territoryId: 领地 ID
+    ///   - newName: 新名称
+    /// - Throws: 更新失败时抛出错误
+    func updateTerritoryName(territoryId: String, newName: String) async throws {
+        print("🔄 开始重命名领地: \(territoryId) -> \(newName)")
+
+        guard let userId = try? await supabase.auth.session.user.id else {
+            print("❌ 用户未登录")
+            throw NSError(domain: "TerritoryManager", code: 401, userInfo: [NSLocalizedDescriptionKey: "用户未登录"])
+        }
+
+        print("✅ 用户 ID: \(userId)")
+
+        guard let territoryUUID = UUID(uuidString: territoryId) else {
+            print("❌ 无效的领地 ID: \(territoryId)")
+            throw NSError(domain: "TerritoryManager", code: 400, userInfo: [NSLocalizedDescriptionKey: "无效的领地 ID"])
+        }
+
+        print("✅ 领地 UUID: \(territoryUUID)")
+
+        struct TerritoryUpdate: Encodable {
+            let name: String
+        }
+
+        let updates = TerritoryUpdate(name: newName)
+
+        print("📝 更新数据: name=\(newName)")
+
+        do {
+            let response = try await supabase
+                .from("territories")
+                .update(updates)
+                .eq("id", value: territoryUUID)
+                .eq("user_id", value: userId)
+                .execute()
+
+            print("✅ Supabase 响应成功")
+            print("   Response: \(response)")
+            print("✅ 领地重命名成功: \(newName)")
+        } catch {
+            print("❌ Supabase 更新失败: \(error)")
+            print("   Error details: \(error.localizedDescription)")
+            throw error
+        }
+    }
+}
+
+// MARK: - Notifications
+
+extension Notification.Name {
+    /// 领地更新通知（如重命名）
+    static let territoryUpdated = Notification.Name("territoryUpdated")
+
+    /// 领地删除通知
+    static let territoryDeleted = Notification.Name("territoryDeleted")
 }
