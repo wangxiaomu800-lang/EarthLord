@@ -421,4 +421,36 @@ class BuildingManager: ObservableObject {
             print("✅ 升级成功：\(building.buildingName) 现在是 Lv.\(nextLevel)")
         }
     }
+
+    // MARK: - Building Demolish
+
+    /// 拆除建筑
+    func demolishBuilding(buildingId: String) async throws {
+        guard let building = playerBuildings.first(where: { $0.id == buildingId }) else {
+            throw BuildingError.buildingNotFound
+        }
+
+        guard let userId = try? await supabase.auth.session.user.id else {
+            throw BuildingError.notAuthenticated
+        }
+
+        guard let buildingUUID = UUID(uuidString: buildingId) else {
+            throw BuildingError.buildingNotFound
+        }
+
+        print("🗑️ 拆除建筑: \(building.buildingName)")
+
+        // 删除数据库记录
+        try await supabase
+            .from("player_buildings")
+            .delete()
+            .eq("id", value: buildingUUID)
+            .eq("user_id", value: userId)
+            .execute()
+
+        // 更新本地数据
+        playerBuildings.removeAll { $0.id == buildingId }
+
+        print("✅ 建筑已拆除: \(building.buildingName)")
+    }
 }

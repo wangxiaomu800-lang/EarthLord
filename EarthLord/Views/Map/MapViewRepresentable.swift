@@ -41,6 +41,12 @@ struct MapViewRepresentable: UIViewRepresentable {
     /// 已搜刮的 POI ID 集合
     var scavengedPOIIds: Set<String>
 
+    /// 玩家建筑列表
+    var buildings: [PlayerBuilding]
+
+    /// 建筑模板字典
+    var buildingTemplates: [String: BuildingTemplate]
+
     // MARK: - UIViewRepresentable
 
     /// 创建 MKMapView
@@ -85,6 +91,9 @@ struct MapViewRepresentable: UIViewRepresentable {
 
         // 更新 POI 标记
         updatePOIAnnotations(mapView: mapView)
+
+        // 更新建筑标注
+        updateBuildingAnnotations(mapView: mapView)
     }
 
     /// 创建协调器
@@ -209,6 +218,33 @@ struct MapViewRepresentable: UIViewRepresentable {
         }
     }
 
+    // MARK: - 建筑标注
+
+    /// 更新建筑标注
+    private func updateBuildingAnnotations(mapView: MKMapView) {
+        // 移除旧的建筑标注
+        let oldAnnotations = mapView.annotations.compactMap { $0 as? BuildingAnnotation }
+        mapView.removeAnnotations(oldAnnotations)
+
+        // 添加新的建筑标注
+        for building in buildings {
+            guard let coord = building.coordinate else { continue }
+
+            // ⚠️ 重要：数据库中保存的已经是 GCJ-02 坐标，直接使用无需转换
+            let template = buildingTemplates[building.templateId]
+            let annotation = BuildingAnnotation(
+                building: building,
+                coordinate: coord,
+                template: template
+            )
+            mapView.addAnnotation(annotation)
+        }
+
+        if !buildings.isEmpty {
+            print("🏗️ 已添加 \(buildings.count) 个建筑标注")
+        }
+    }
+
     // MARK: - 滤镜效果
 
     /// 应用末世滤镜（泛黄、降低饱和度）
@@ -305,11 +341,28 @@ struct MapViewRepresentable: UIViewRepresentable {
 
         // MARK: - POI 注解渲染
 
-        /// ⭐ 关键方法：渲染 POI 注解视图
+        /// ⭐ 关键方法：渲染 POI 和建筑注解视图
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             // 用户位置标记使用默认样式
             if annotation is MKUserLocation {
                 return nil
+            }
+
+            // 建筑标注
+            if let buildingAnnotation = annotation as? BuildingAnnotation {
+                let identifier = "BuildingAnnotation"
+                var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView
+
+                if view == nil {
+                    view = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+                }
+
+                view?.annotation = annotation
+                view?.markerTintColor = buildingAnnotation.building.status == .active ? .systemGreen : .systemOrange
+                view?.glyphImage = UIImage(systemName: buildingAnnotation.template?.category.icon ?? "building.2.fill")
+                view?.canShowCallout = true
+
+                return view
             }
 
             // POI 标记

@@ -280,7 +280,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Supporting Files/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "地球新主- Sherry";
+				INFOPLIST_KEY_CFBundleDisplayName = "末日领主";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -319,7 +319,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "Supporting Files/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "地球新主- Sherry";
+				INFOPLIST_KEY_CFBundleDisplayName = "末日领主";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

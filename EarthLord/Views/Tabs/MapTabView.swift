@@ -38,6 +38,9 @@ struct MapTabView: View {
     /// 领地管理器
     @ObservedObject var territoryManager = TerritoryManager.shared
 
+    /// 建筑管理器
+    @ObservedObject var buildingManager = BuildingManager.shared
+
     /// 认证管理器
     @EnvironmentObject var authManager: AuthManager
 
@@ -130,7 +133,9 @@ struct MapTabView: View {
                     territories: territories,
                     currentUserId: authManager.currentUser?.id.uuidString,
                     pois: explorationManager.nearbyPOIs,
-                    scavengedPOIIds: explorationManager.scavengedPOIIds
+                    scavengedPOIIds: explorationManager.scavengedPOIIds,
+                    buildings: buildingManager.playerBuildings,
+                    buildingTemplates: Dictionary(uniqueKeysWithValues: buildingManager.buildingTemplates.map { ($0.templateId, $0) })
                 )
                 .id(mapID) // 当 mapID 变化时，强制重建整个地图视图
                 .ignoresSafeArea()

@@ -90,6 +90,16 @@ struct TerritoryTabView: View {
             .task {
                 await loadTerritories()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .territoryUpdated)) { _ in
+                Task {
+                    await loadTerritories()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .territoryDeleted)) { _ in
+                Task {
+                    await loadTerritories()
+                }
+            }
             .sheet(isPresented: $showingDetail) {
                 if let territory = selectedTerritory {
                     TerritoryDetailView(territory: territory, onDelete: {

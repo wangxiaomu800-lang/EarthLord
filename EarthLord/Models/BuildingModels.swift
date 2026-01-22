@@ -199,3 +199,78 @@ struct PlayerBuildingUpdateDTO: Encodable {
     let build_completed_at: Date?
     let updated_at: Date
 }
+
+// MARK: - Display Extensions
+
+import CoreLocation
+import SwiftUI
+
+extension PlayerBuilding {
+    /// 坐标（如果有）
+    var coordinate: CLLocationCoordinate2D? {
+        guard let lat = locationLat, let lon = locationLon else { return nil }
+        return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+    }
+
+    /// 建造进度（0.0 ~ 1.0）- 使用已有的 constructionProgress
+    var buildProgress: Double {
+        return constructionProgress
+    }
+
+    /// 格式化剩余时间
+    var formattedRemainingTime: String {
+        guard status == .constructing,
+              let completedAt = buildCompletedAt else { return "" }
+
+        let remaining = completedAt.timeIntervalSince(Date())
+        guard remaining > 0 else { return "即将完成" }
+
+        let hours = Int(remaining) / 3600
+        let minutes = (Int(remaining) % 3600) / 60
+        let seconds = Int(remaining) % 60
+
+        if hours > 0 {
+            return "\(hours)h \(minutes)m"
+        } else if minutes > 0 {
+            return "\(minutes)m \(seconds)s"
+        } else {
+            return "\(seconds)s"
+        }
+    }
+}
+
+extension BuildingStatus {
+    var displayName: String {
+        switch self {
+        case .constructing: return "建造中"
+        case .active: return "运行中"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .constructing: return .orange
+        case .active: return .green
+        }
+    }
+}
+
+extension BuildingCategory {
+    var icon: String {
+        switch self {
+        case .survival: return "house.fill"
+        case .storage: return "shippingbox.fill"
+        case .production: return "hammer.fill"
+        case .energy: return "bolt.fill"
+        }
+    }
+
+    var displayName: String {
+        switch self {
+        case .survival: return "生存"
+        case .storage: return "储存"
+        case .production: return "生产"
+        case .energy: return "能源"
+        }
+    }
+}
